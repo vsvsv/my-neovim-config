@@ -350,7 +350,7 @@ require("lazy").setup({
                     ["<C-u>"] = cmp.mapping.abort(),
                     ["<CR>"] = cmp.mapping.confirm({ select = true }),
                 }),
-                vim.keymap.set('n', '<C-c>', cmp.mapping.complete),
+                vim.keymap.set("n", "<C-c>", cmp.mapping.complete),
                 sources = cmp.config.sources({
                     {
                         name = "nvim_lsp",
@@ -408,7 +408,7 @@ require("lazy").setup({
                 contents = vim.lsp.util._normalize_markdown(contents, {
                     width = vim.lsp.util._make_floating_popup_size(contents, opts),
                 })
-                vim.bo[bufnr].filetype = 'markdown'
+                vim.bo[bufnr].filetype = "markdown"
                 vim.treesitter.start(bufnr);
                 vim.lsp.buf_attach_client(bufnr, 0);
                 vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
@@ -447,6 +447,7 @@ require("lazy").setup({
                 "tsserver",
                 -- "zls",
                 "markdown_oxide",
+                "clangd",
             };
 
             mason.setup({
@@ -487,6 +488,13 @@ require("lazy").setup({
                                 disable = { "missing-fields" },
                             }
                         }
+                    };
+                end
+                if string.find(lsp_name, "clangd") then
+                    settingsObj.cmd = {
+                        "clangd",
+                        -- Use webkit lint style by default (indent with 4 spaces, etc)
+                        "--fallback-style=webkit",
                     };
                 end
                 lspconfig[lsp_name].setup(settingsObj);
@@ -576,7 +584,7 @@ require("lazy").setup({
                 },
             });
 
-            require('persistent-breakpoints').setup({
+            require("persistent-breakpoints").setup({
                 load_breakpoints_event = { "BufReadPost" },
             });
 
@@ -603,12 +611,12 @@ require("lazy").setup({
             vim.keymap.set(
                 "n",
                 "<Leader>db",
-                function() require('persistent-breakpoints.api').toggle_breakpoint() end
+                function() require("persistent-breakpoints.api").toggle_breakpoint() end
             );
             vim.keymap.set(
                 "n",
                 "<Leader>dx",
-                function() require('persistent-breakpoints.api').clear_all_breakpoints() end
+                function() require("persistent-breakpoints.api").clear_all_breakpoints() end
             );
             vim.keymap.set("n", "<Leader>dr", function() require("dap").repl.toggle() end)
             local hover = nil;
@@ -753,7 +761,7 @@ require("lazy").setup({
         lazy = true,
         event = "VeryLazy",
         config = function()
-            require('gitblame').setup({
+            require("gitblame").setup({
                 enabled = false,
             });
             vim.keymap.set("n", "<leader>gb", "<cmd>GitBlameToggle<cr>");
@@ -761,27 +769,27 @@ require("lazy").setup({
     },
     {
         -- https://github.com/willothy/moveline.nvim
-        'willothy/moveline.nvim',
+        "willothy/moveline.nvim",
         lazy = true,
         event = "VeryLazy",
-        build = 'make',
+        build = "make",
         config = function()
-            local moveline = require('moveline')
-            vim.keymap.set('n', '<C-k>', moveline.up)
-            vim.keymap.set('n', '<C-j>', moveline.down)
-            vim.keymap.set('v', '<C-k>', moveline.block_up)
-            vim.keymap.set('v', '<C-j>', moveline.block_down)
+            local moveline = require("moveline")
+            vim.keymap.set("n", "<C-k>", moveline.up)
+            vim.keymap.set("n", "<C-j>", moveline.down)
+            vim.keymap.set("v", "<C-k>", moveline.block_up)
+            vim.keymap.set("v", "<C-j>", moveline.block_down)
         end,
     },
     {
         -- https://github.com/Wansmer/treesj
-        'Wansmer/treesj',
+        "Wansmer/treesj",
         lazy = true,
         event = "VeryLazy",
-        dependencies = { 'nvim-treesitter/nvim-treesitter' },
+        dependencies = { "nvim-treesitter/nvim-treesitter" },
         config = function()
-            local treesj = require('treesj');
-            local lang_utils = require('treesj.langs.utils');
+            local treesj = require("treesj");
+            local lang_utils = require("treesj.langs.utils");
             treesj.setup({
                 use_default_keymaps = false,
                 langs = {
@@ -794,17 +802,17 @@ require("lazy").setup({
                         ContainerDecl = lang_utils.set_preset_for_list({
                             both = {
                                 non_bracket_node = true,
-                                shrink_node = { from = '{', to = '}' },
+                                shrink_node = { from = "{", to = "}" },
                             },
                         }),
                     },
                 },
             })
-            vim.keymap.set('n', '<Leader>\\', treesj.toggle);
+            vim.keymap.set("n", "<Leader>\\", treesj.toggle);
         end,
     },
     {
-        'akinsho/toggleterm.nvim',
+        "akinsho/toggleterm.nvim",
         version = "*",
         lazy = true,
         event = "VeryLazy",
@@ -851,9 +859,32 @@ require("lazy").setup({
         },
     },
     {
-        'NlGHT/vim-eel',
+        "NlGHT/vim-eel",
         version = "*",
         lazy = true,
         event = "UIEnter",
+    },
+    {
+        "David-Kunz/gen.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        opts = {
+            model = "mistral",   -- The default model to use.
+            host = "localhost",  -- The host running the Ollama service.
+            port = "11434",      -- The port on which the Ollama service is listening.
+            quit_map = "q",      -- set keymap for close the response window
+            retry_map = "<c-r>", -- set keymap to re-send the current prompt
+            init = function() pcall(io.popen, "ollama serve > /dev/null 2>&1 &") end,
+            command = function(options)
+                local body = { model = options.model, stream = true }
+                return "curl --silent --no-buffer -X POST http://" ..
+                    options.host .. ":" .. options.port .. "/api/chat -d $body"
+            end,
+            display_mode = "float", -- The display mode. Can be "float" or "split".
+            show_prompt = false,    -- Shows the prompt submitted to Ollama.
+            show_model = true,      -- Displays which model you are using at the beginning of your chat session.
+            no_auto_close = false,  -- Never closes the window automatically.
+            debug = false           -- Prints errors and the command which is run.
+        }
     }
 }, lazyPmOptions);

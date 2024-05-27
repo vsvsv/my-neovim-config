@@ -49,6 +49,8 @@ vim.keymap.set('n', '<Leader>vn', function() -- Leader-[v]isual-[n]umber – tog
     vim.wo.relativenumber = not vim.wo.relativenumber;
 end);
 
+-- "*y -> "*p  – yank and paste using native OS clipboard (works in different termninal windows)
+
 vim.diagnostic.config({
     virtual_text = true,
     signs = true,

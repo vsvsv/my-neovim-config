@@ -1,5 +1,5 @@
 --
--- colorscheme.lua -- defines custom 16-color colorscheme based on original neovim theme
+-- colorscheme.lua -- defines custom 16-color colorscheme which resembles GitHub scheme
 --
 
 -- Set background to transparent for all groups listed below
