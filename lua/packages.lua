@@ -78,13 +78,15 @@ require("lazy").setup({
                 highlight = { enable = true },
                 indent = { enable = true },
             });
+            vim.filetype.add({
+                pattern = { [".*/.*%.mm"] = "cpp" },
+            });
         end
     },
     {
         -- https://github.com/folke/flash.nvim
         "folke/flash.nvim",
         event = "VeryLazy",
-        ---@type Flash.Config
         opts = {},
         -- stylua: ignore
         keys = {
@@ -448,6 +450,11 @@ require("lazy").setup({
                 -- "zls",
                 "markdown_oxide",
                 "clangd",
+                "jsonls",
+                "html",
+                "somesass_ls",
+                "cssls",
+                "eslint",
             };
 
             mason.setup({
