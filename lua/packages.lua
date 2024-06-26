@@ -237,7 +237,7 @@ require("lazy").setup({
         "NeogitOrg/neogit",
         lazy = true,
         event = "VeryLazy",
-        branch = "nightly",
+        branch = "master",
         dependencies = {
             "nvim-lua/plenary.nvim",
             "sindrets/diffview.nvim",

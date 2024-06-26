@@ -8,7 +8,7 @@
 
 vim.wo.number = true; -- enable line numbers
 vim.opt.cursorline = false; -- highlight current line (where the cursor is)
-vim.wo.relativenumber = false; -- no relative numbers by default (has toggle keymap)
+vim.wo.relativenumber = true; -- relative numbers by default (has toggle keymap)
 vim.g.mapleader = " ";
 vim.opt.fillchars = {eob = " "}; -- disable '~' at the end of buffer
 vim.loader.enable();
