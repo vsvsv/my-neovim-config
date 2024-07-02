@@ -38,7 +38,10 @@ vim.g.netrw_localcopydircmd = 'cp -r'; -- Enable recursive copying by default
 vim.g.netrw_sort_sequence = [[[\/]\s]] -- Show directories first (sorting)
 vim.g.netrw_sizestyle = "H"; -- Human-readable files sizes
 
-vim.keymap.set('n', '<Leader>e', '<cmd>Re<cr>'); -- Open last directory with netrw by Spc+e
+-- Disable netrw (in favor of installed neo-tree)
+vim.g.loaded_netrw = 1;
+vim.g.loaded_netrwPlugin = 1;
+
 vim.keymap.set('n', '<Leader>n', '<cmd>noh<cr>'); -- Reset current search pattern with Spc-h
 vim.keymap.set('n', '<Leader>o', ':<c-u>call append(line("."), repeat([""], v:count1))<cr>'); -- Insert blank line after
 vim.keymap.set('n', '<Leader>O', ':<c-u>call append(line(".")-1, repeat([""], v:count1))<cr>'); -- Insert blank line before

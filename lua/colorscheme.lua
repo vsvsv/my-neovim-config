@@ -101,11 +101,11 @@ local function set_default_theme()
     vim.api.nvim_set_hl(0, "MyCmpFloatingWindow", { bg = c_gui.black, ctermbg = c_term.black });
 
     -- JS/TS
-    set_highlight_group_attrs("@tag.javascript", { ctermfg = c_term.lightBlue, fg = c_gui.lightBlue, bold = true });
-    set_highlight_group_attrs("@tag.delimiter.javascript",
-        { ctermfg = c_term.lightBlue, fg = c_gui.lightBlue, bold = false });
-    set_highlight_group_attrs("@punctuation.bracket.javascript", { ctermfg = c_term.lightGrey3, fg = c_gui.lightGrey3 });
-    set_highlight_group_attrs("@tag.attribute.javascript", { ctermfg = c_term.lightGrey2, fg = c_gui.lightGrey2 });
+    -- set_highlight_group_attrs("@tag.javascript", { ctermfg = c_term.lightBlue, fg = c_gui.lightBlue, bold = true });
+    -- set_highlight_group_attrs("@tag.delimiter.javascript",
+    --     { ctermfg = c_term.lightBlue, fg = c_gui.lightBlue, bold = false });
+    -- set_highlight_group_attrs("@punctuation.bracket.javascript", { ctermfg = c_term.lightGrey3, fg = c_gui.lightGrey3 });
+    -- set_highlight_group_attrs("@tag.attribute.javascript", { ctermfg = c_term.lightGrey2, fg = c_gui.lightGrey2 });
     set_highlight_group_attrs("@comment.documentation.javascript", { ctermfg = c_term.lightGrey4, fg = c_gui.lightGrey4 });
     set_highlight_group_attrs("@keyword.jsdoc", { ctermfg = c_term.lightGrey4, fg = c_gui.lightGrey4, bold = true });
     vim.api.nvim_set_hl(0, "@keyword.export.javascript", { link = "Keyword" });

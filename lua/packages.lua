@@ -39,6 +39,7 @@ local lazyPmOptions = {
                 "tohtml",
                 "tutor",
                 "zipPlugin",
+                "netrw",
             },
         },
     },
@@ -52,18 +53,39 @@ require("lazy").setup({
         lazy = true,
     },
     {
-        -- https://github.com/prichrd/netrw.nvim
-        "prichrd/netrw.nvim",
+        -- https://github.com/nvim-neo-tree/neo-tree.nvim
+        "nvim-neo-tree/neo-tree.nvim",
+        branch = "v3.x",
         lazy = true,
         event = "UIEnter",
         dependencies = {
-            "nvim-tree/nvim-web-devicons",
+            "nvim-lua/plenary.nvim",
+            "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+            "MunifTanjim/nui.nvim",
+            "3rd/image.nvim",              -- Optional image support in preview window: See `# Preview Mode` for more information
         },
         config = function()
-            require("netrw").setup({
-                use_devicons = true,
+            require("neo-tree").setup({
+                source_selector = {
+                    winbar = true,
+                    statusline = false
+                },
+                window = {
+                    position = "current",
+                    mappings = {
+                        ["P"] = { "toggle_preview", config = { use_float = true, use_image_nvim = true } },
+                    }
+                },
+                filesystem = {
+                    hijack_netrw_behaviour = "open_current",
+                    -- use_libuv_file_watcher = true,
+                    filtered_items = {
+                        visible = true, -- Show all hidden files dimmed out
+                    },
+                },
             });
-        end,
+            vim.keymap.set('n', '<Leader>e', '<cmd>Neotree position=current toggle=true reveal=true<cr>'); -- Open last directory with neotree by Spc+e
+        end
     },
     {
         -- https://github.com/nvim-treesitter/nvim-treesitter
@@ -220,7 +242,7 @@ require("lazy").setup({
             local dw = require("diffview");
             dw.setup({
                 view = {
-                    default = { layout = "diff2_vertical" },
+                    default = { layout = "diff2_horizontal" },
                 },
                 file_panel = {
                     win_config = {
@@ -871,27 +893,27 @@ require("lazy").setup({
         lazy = true,
         event = "UIEnter",
     },
-    {
-        "David-Kunz/gen.nvim",
-        lazy = true,
-        event = "VeryLazy",
-        opts = {
-            model = "mistral",   -- The default model to use.
-            host = "localhost",  -- The host running the Ollama service.
-            port = "11434",      -- The port on which the Ollama service is listening.
-            quit_map = "q",      -- set keymap for close the response window
-            retry_map = "<c-r>", -- set keymap to re-send the current prompt
-            init = function() pcall(io.popen, "ollama serve > /dev/null 2>&1 &") end,
-            command = function(options)
-                local body = { model = options.model, stream = true }
-                return "curl --silent --no-buffer -X POST http://" ..
-                    options.host .. ":" .. options.port .. "/api/chat -d $body"
-            end,
-            display_mode = "float", -- The display mode. Can be "float" or "split".
-            show_prompt = false,    -- Shows the prompt submitted to Ollama.
-            show_model = true,      -- Displays which model you are using at the beginning of your chat session.
-            no_auto_close = false,  -- Never closes the window automatically.
-            debug = false           -- Prints errors and the command which is run.
-        }
-    }
+    -- {
+    --     "David-Kunz/gen.nvim",
+    --     lazy = true,
+    --     event = "VeryLazy",
+    --     opts = {
+    --         model = "mistral",   -- The default model to use.
+    --         host = "localhost",  -- The host running the Ollama service.
+    --         port = "11434",      -- The port on which the Ollama service is listening.
+    --         quit_map = "q",      -- set keymap for close the response window
+    --         retry_map = "<c-r>", -- set keymap to re-send the current prompt
+    --         init = function() pcall(io.popen, "ollama serve > /dev/null 2>&1 &") end,
+    --         command = function(options)
+    --             local body = { model = options.model, stream = true }
+    --             return "curl --silent --no-buffer -X POST http://" ..
+    --                 options.host .. ":" .. options.port .. "/api/chat -d $body"
+    --         end,
+    --         display_mode = "float", -- The display mode. Can be "float" or "split".
+    --         show_prompt = false,    -- Shows the prompt submitted to Ollama.
+    --         show_model = true,      -- Displays which model you are using at the beginning of your chat session.
+    --         no_auto_close = false,  -- Never closes the window automatically.
+    --         debug = false           -- Prints errors and the command which is run.
+    --     }
+    -- }
 }, lazyPmOptions);
