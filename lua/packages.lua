@@ -354,14 +354,14 @@ require("lazy").setup({
                 },
                 mapping = cmp.mapping({
                     ["<Tab>"] = cmp.mapping(function(fallback)
-                        if vim.snippet.jumpable(1) then
+                        if vim.snippet.active({ filter = { jump_dir = 1 } }) then
                             vim.snippet.jump(1)
                         else
                             fallback();
                         end
                     end, { "i", "s", "c", }),
                     ["<S-Tab>"] = cmp.mapping(function(fallback)
-                        if vim.snippet.jumpable(-1) then
+                        if vim.snippet.active({ filter = { jump_dir = -1 } }) then
                             vim.snippet.jump(-1)
                         else
                             fallback()
@@ -676,8 +676,7 @@ require("lazy").setup({
         event = { "VeryLazy" },
         config = function()
             local trouble = require("trouble");
-            vim.keymap.set("n", "<leader>lt", function() trouble.toggle("document_diagnostics") end);
-            vim.keymap.set("n", "<leader>lw", function() trouble.toggle("workspace_diagnostics") end);
+            vim.keymap.set("n", "<leader>lt", function() trouble.toggle("diagnostics") end);
             vim.keymap.set("n", "<leader>la", function() vim.lsp.buf.code_action() end);
             vim.keymap.set("n", "<leader>lr", function() trouble.toggle("lsp_references") end);
             vim.keymap.set("n", "<leader>ls", function() vim.lsp.buf.rename() end);
