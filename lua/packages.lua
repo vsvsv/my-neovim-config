@@ -72,15 +72,25 @@ require("lazy").setup({
                 },
                 window = {
                     position = "current",
+                    auto_expand_width = true,
                     mappings = {
                         ["P"] = { "toggle_preview", config = { use_float = true, use_image_nvim = true } },
                     }
                 },
                 filesystem = {
                     hijack_netrw_behaviour = "open_current",
-                    -- use_libuv_file_watcher = true,
+                    use_libuv_file_watcher = true,
                     filtered_items = {
                         visible = true, -- Show all hidden files dimmed out
+                        hide_hidden = false,
+                        hide_dotfiles = false,
+                        hide_by_name = { ".git" },
+                    },
+                },
+                default_component_configs = {
+                    name = { trailing_slash = true },
+                    type = {
+                        enabled = false,
                     },
                 },
             });
@@ -205,13 +215,19 @@ require("lazy").setup({
         "nvim-telescope/telescope.nvim",
         lazy = true,
         event = "VeryLazy",
-        dependencies = { "nvim-lua/plenary.nvim" },
+        dependencies = { "nvim-lua/plenary.nvim", "folke/trouble.nvim" },
         config = function()
-            require("telescope").setup({
+            local open_with_trouble = require("trouble.sources.telescope").open;
+            local telescope = require("telescope");
+            telescope.setup({
                 defaults = {
+                    mappings = {
+                        i = { ["<c-t>"] = open_with_trouble },
+                        n = { ["<c-t>"] = open_with_trouble },
+                    },
                     layout_strategy = "vertical",
                 },
-            });
+            })
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
@@ -892,27 +908,45 @@ require("lazy").setup({
         lazy = true,
         event = "UIEnter",
     },
-    -- {
-    --     "David-Kunz/gen.nvim",
-    --     lazy = true,
-    --     event = "VeryLazy",
-    --     opts = {
-    --         model = "mistral",   -- The default model to use.
-    --         host = "localhost",  -- The host running the Ollama service.
-    --         port = "11434",      -- The port on which the Ollama service is listening.
-    --         quit_map = "q",      -- set keymap for close the response window
-    --         retry_map = "<c-r>", -- set keymap to re-send the current prompt
-    --         init = function() pcall(io.popen, "ollama serve > /dev/null 2>&1 &") end,
-    --         command = function(options)
-    --             local body = { model = options.model, stream = true }
-    --             return "curl --silent --no-buffer -X POST http://" ..
-    --                 options.host .. ":" .. options.port .. "/api/chat -d $body"
-    --         end,
-    --         display_mode = "float", -- The display mode. Can be "float" or "split".
-    --         show_prompt = false,    -- Shows the prompt submitted to Ollama.
-    --         show_model = true,      -- Displays which model you are using at the beginning of your chat session.
-    --         no_auto_close = false,  -- Never closes the window automatically.
-    --         debug = false           -- Prints errors and the command which is run.
-    --     }
-    -- }
+    {
+        "danymat/neogen",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local neogen = require("neogen");
+            neogen.setup({
+                enabled = true,
+                input_after_comment = true,
+            });
+            local opts = { noremap = true, silent = true };
+            vim.keymap.set("n", "<Leader>ld", neogen.generate, opts);
+        end,
+    },
+    {
+        -- https://github.com/tenxsoydev/karen-yank.nvim
+        "tenxsoydev/karen-yank.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require("karen-yank").setup({
+                mappings = {
+                    -- karen controls the use of registers (and probably talks to the manager when things doesn't work as intended)
+                    karen = "y",
+                    -- false: delete into black hole by default and use registers with karen key
+                    -- true: use registers by default and delete into black hole with karen key
+                    invert = false,
+                    disable = { "s", "S" },
+                },
+            });
+        end,
+    },
+    {
+        -- https://github.com/windwp/nvim-ts-autotag
+        "windwp/nvim-ts-autotag",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require('nvim-ts-autotag').setup({});
+        end,
+    },
 }, lazyPmOptions);
