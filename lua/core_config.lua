@@ -80,3 +80,20 @@ vim.api.nvim_create_autocmd({"BufWinEnter"}, {
   desc = "load view (folds), when opening file",
   command = "silent! loadview",
 });
+
+
+-- Quickfix list key mappings
+vim.keymap.set('n', '<Leader>cn', '<cmd>cnext<cr>'); -- Open next file in quickfix list
+vim.keymap.set('n', '<Leader>cp', '<cmd>cprev<cr>'); -- Open previous file in quickfix list
+
+-- Search related bindings
+vim.keymap.set('v', '<Leader>s', 'y/\\V<C-R>"<CR>'); -- Search forward for selected text
+vim.keymap.set('v', '<Leader>S', 'y?\\V<C-R>"<CR>'); -- Search forward for selected text
+
+-- Yank/paste/cut related bindings
+vim.keymap.set('n', 'Y', '^y$');
+vim.keymap.set({ 'n', 'v' }, 'my', '"*y');
+vim.keymap.set({ 'n' }, 'mY', '^v$"*y');
+
+vim.keymap.set('v', 'p', '"0p');
+vim.keymap.set({ 'n', 'v' }, 'P', '"*p');

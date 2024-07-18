@@ -231,11 +231,10 @@ require("lazy").setup({
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
-            vim.keymap.set("n", "<leader>fb", builtin.buffers, {});
+            -- vim.keymap.set("n", "<leader>fb", builtin.buffers, {}); -- disabled, using 'j-morano/buffer_manager.nvim' instead
             vim.keymap.set("n", "<leader>fh", builtin.help_tags, {});
             vim.keymap.set("n", "<leader>ft", builtin.diagnostics, {});     -- "t" for trouble
             vim.keymap.set("n", "<leader>fd", builtin.lsp_definitions, {}); -- "d" for definitions
-            vim.keymap.set("n", "<leader>fl", builtin.lsp_document_symbols, {});
             vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});  -- "r" for references
             vim.keymap.set({ "n", "v" }, "<leader>fs", builtin.grep_string, {});
         end
@@ -373,7 +372,11 @@ require("lazy").setup({
                         if vim.snippet.active({ filter = { jump_dir = 1 } }) then
                             vim.snippet.jump(1)
                         else
-                            fallback();
+                            if cmp.visible() then
+                                cmp.confirm({ select = true });
+                            else
+                                fallback();
+                            end
                         end
                     end, { "i", "s", "c", }),
                     ["<S-Tab>"] = cmp.mapping(function(fallback)
@@ -442,24 +445,6 @@ require("lazy").setup({
                 "confirm_done",
                 cmp_autopairs.on_confirm_done()
             );
-
-            ---@diagnostic disable-next-line: duplicate-set-field
-            vim.lsp.util.stylize_markdown = function(bufnr, contents, opts)
-                contents = vim.lsp.util._normalize_markdown(contents, {
-                    width = vim.lsp.util._make_floating_popup_size(contents, opts),
-                })
-                vim.bo[bufnr].filetype = "markdown"
-                vim.treesitter.start(bufnr);
-                vim.lsp.buf_attach_client(bufnr, 0);
-                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
-
-                return contents
-            end
-            vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-                vim.lsp.handlers.hover, {
-                    border = "single"
-                }
-            );
         end
     },
     {
@@ -493,6 +478,7 @@ require("lazy").setup({
                 "somesass_ls",
                 "cssls",
                 "eslint",
+                "rust_analyzer",
             };
 
             mason.setup({
@@ -517,7 +503,14 @@ require("lazy").setup({
                 library = { plugins = { "nvim-dap-ui" }, types = true },
             });
 
-            lspconfig.zls.setup({ capabilities = capabilities });
+            lspconfig.zls.setup({
+                capabilities = capabilities,
+                cmd = {
+                    "zls",
+                    "--config-path",
+                    vim.fn.stdpath("config") .. "/lsp-config/zls.json",
+                }
+            });
 
             for _, lsp_name in ipairs(required_lsps) do
                 local settingsObj = { capabilities = capabilities };
@@ -540,10 +533,33 @@ require("lazy").setup({
                         "clangd",
                         -- Use webkit lint style by default (indent with 4 spaces, etc)
                         "--fallback-style=webkit",
+                        "--function-arg-placeholders=0",
                     };
                 end
                 lspconfig[lsp_name].setup(settingsObj);
             end
+
+            ---@diagnostic disable-next-line: duplicate-set-field
+            vim.lsp.util.stylize_markdown = function(bufnr, contents, opts)
+                contents = vim.lsp.util._normalize_markdown(contents, {
+                    width = vim.lsp.util._make_floating_popup_size(contents, opts),
+                })
+                vim.bo[bufnr].filetype = "markdown";
+                vim.treesitter.start(bufnr);
+
+                local client_id = vim.lsp.start_client(lspconfig["markdown_oxide"]);
+                ---@diagnostic disable-next-line: param-type-mismatch
+                vim.lsp.buf_attach_client(bufnr, client_id);
+
+                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
+
+                return contents
+            end
+            vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+                vim.lsp.handlers.hover, {
+                    border = "single"
+                }
+            );
         end
     },
     {
@@ -711,7 +727,7 @@ require("lazy").setup({
             doc_lines = 16,
             handler_opts = {
                 border = "single",
-            }
+            },
         },
         config = function(_, opts) require("lsp_signature").setup(opts); end
     },
@@ -923,30 +939,46 @@ require("lazy").setup({
         end,
     },
     {
-        -- https://github.com/tenxsoydev/karen-yank.nvim
-        "tenxsoydev/karen-yank.nvim",
-        lazy = true,
-        event = "VeryLazy",
-        config = function()
-            require("karen-yank").setup({
-                mappings = {
-                    -- karen controls the use of registers (and probably talks to the manager when things doesn't work as intended)
-                    karen = "y",
-                    -- false: delete into black hole by default and use registers with karen key
-                    -- true: use registers by default and delete into black hole with karen key
-                    invert = false,
-                    disable = { "s", "S" },
-                },
-            });
-        end,
-    },
-    {
         -- https://github.com/windwp/nvim-ts-autotag
         "windwp/nvim-ts-autotag",
         lazy = true,
         event = "VeryLazy",
         config = function()
             require('nvim-ts-autotag').setup({});
+        end,
+    },
+    {
+        -- https://github.com/saifulapm/chartoggle.nvim
+        -- Toogle comma(,), semicolon(;) or other character in neovim end of line from anywhere in the line
+        'saifulapm/chartoggle.nvim',
+        opts = {
+            leader = '<Leader>',            -- you can use any key as Leader
+            keys = { ',', ';' }             -- Which keys will be toggle end of the line
+        },
+        keys = { '<Leader>,', '<Leader>;' } -- Lazy loaded
+    },
+    {
+        -- https://github.com/j-morano/buffer_manager.nvim
+        'j-morano/buffer_manager.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local buf_mgr_ui = require("buffer_manager.ui");
+            require("buffer_manager").setup({
+                width = 0.9,
+            });
+            vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
+        end,
+    },
+    {
+        -- https://github.com/j-morano/buffer_manager.nvim
+        "gbprod/cutlass.nvim",
+        lazy = true,
+        event = "UIEnter",
+        config = function()
+            require("cutlass").setup({
+                exclude = { "nd", "xd" },
+            });
         end,
     },
 }, lazyPmOptions);
