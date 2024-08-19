@@ -513,6 +513,11 @@ require("lazy").setup({
             });
 
             for _, lsp_name in ipairs(required_lsps) do
+                -- skip tsserver setup with lspconfig because it is very slow on large codebases,
+                -- instead we use 'pmizio/typescript-tools.nvim'
+                if (lsp_name == "tsserver") then
+                    goto continue;
+                end
                 local settingsObj = { capabilities = capabilities };
                 if string.find(lsp_name, "lua_ls") then
                     settingsObj.settings = {
@@ -537,6 +542,7 @@ require("lazy").setup({
                     };
                 end
                 lspconfig[lsp_name].setup(settingsObj);
+                ::continue::
             end
 
             ---@diagnostic disable-next-line: duplicate-set-field
@@ -561,6 +567,21 @@ require("lazy").setup({
                 }
             );
         end
+    },
+    {
+        -- https://github.com/pmizio/typescript-tools.nvim
+        --
+        -- Because standard tsserver with lspconfig is very slow on large codebases,
+        -- this plugin communicates with tsserver via its own protocol, which is
+        -- much faster
+        "pmizio/typescript-tools.nvim",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "neovim/nvim-lspconfig",
+        },
+        lazy = true,
+        event = { "BufReadPost", "BufNewFile" },
+        opts = {},
     },
     {
         -- https://github.com/mfussenegger/nvim-dap
@@ -714,6 +735,7 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>ls", function() vim.lsp.buf.rename() end);
             vim.keymap.set("n", "<leader>lf", function() vim.lsp.buf.format() end);
             vim.keymap.set("n", "<leader>i", function() vim.lsp.buf.hover() end);
+            vim.keymap.set("n", "<leader>li", function() vim.diagnostic.open_float() end);
         end
     },
     {
@@ -816,16 +838,19 @@ require("lazy").setup({
         end
     },
     {
-        -- https://github.com/f-person/git-blame.nvim
-        "f-person/git-blame.nvim",
+        -- https://github.com/FabijanZulj/blame.nvim
+        "FabijanZulj/blame.nvim",
         lazy = true,
         event = "VeryLazy",
         config = function()
-            require("gitblame").setup({
-                enabled = false,
-            });
-            vim.keymap.set("n", "<leader>gb", "<cmd>GitBlameToggle<cr>");
-        end,
+            require("blame").setup();
+            -- vim.keymap.set("n", "<leader>gb", function()
+            --     vim.cmd("BlameToggle");
+            --     vim.fn.feedkeys("<C-w>h", "n");
+            -- end);
+            vim.keymap.set("n", "<Leader>gb",
+                "<cmd>execute \"BlameToggle window\" | sleep 200m | call feedkeys(\"\\<C-w>h\")<CR>");
+        end
     },
     {
         -- https://github.com/willothy/moveline.nvim
@@ -876,12 +901,28 @@ require("lazy").setup({
         version = "*",
         lazy = true,
         event = "VeryLazy",
-        opts = {
-            size = 16,
-            open_mapping = "<Leader>t",
-            direction = "horizontal",
-            insert_mappings = false,
-        },
+        config = function()
+            local tt = require("toggleterm");
+            tt.setup({
+                size = 16,
+                open_mapping = "<Leader>t",
+                direction = "horizontal",
+                insert_mappings = false,
+            });
+            vim.api.nvim_create_autocmd({ "TermEnter" }, {
+                callback = function()
+                    for _, buffers in ipairs(vim.fn.getbufinfo()) do
+                        local filetype = vim.api.nvim_buf_get_option(buffers.bufnr, "filetype")
+                        if filetype == "toggleterm" then
+                            vim.api.nvim_create_autocmd({ "BufWriteCmd", "FileWriteCmd", "FileAppendCmd" }, {
+                                buffer = buffers.bufnr,
+                                command = "q!",
+                            })
+                        end
+                    end
+                end,
+            })
+        end
     },
     {
         -- https://github.com/catppuccin/nvim
@@ -917,12 +958,6 @@ require("lazy").setup({
                 end,
             },
         },
-    },
-    {
-        "NlGHT/vim-eel",
-        version = "*",
-        lazy = true,
-        event = "UIEnter",
     },
     {
         "danymat/neogen",
@@ -968,17 +1003,6 @@ require("lazy").setup({
                 width = 0.9,
             });
             vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
-        end,
-    },
-    {
-        -- https://github.com/j-morano/buffer_manager.nvim
-        "gbprod/cutlass.nvim",
-        lazy = true,
-        event = "UIEnter",
-        config = function()
-            require("cutlass").setup({
-                exclude = { "nd", "xd" },
-            });
         end,
     },
 }, lazyPmOptions);
