@@ -79,7 +79,7 @@ require("lazy").setup({
                 },
                 filesystem = {
                     hijack_netrw_behaviour = "open_current",
-                    use_libuv_file_watcher = true,
+                    check_gitignore_in_search = false,
                     filtered_items = {
                         visible = true, -- Show all hidden files dimmed out
                         hide_hidden = false,
@@ -469,7 +469,7 @@ require("lazy").setup({
 
             local required_lsps = {
                 "lua_ls",
-                "tsserver",
+                "vtsls",
                 -- "zls",
                 "markdown_oxide",
                 "clangd",
@@ -479,6 +479,7 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
+                "gopls",
             };
 
             mason.setup({
@@ -513,11 +514,6 @@ require("lazy").setup({
             });
 
             for _, lsp_name in ipairs(required_lsps) do
-                -- skip tsserver setup with lspconfig because it is very slow on large codebases,
-                -- instead we use 'pmizio/typescript-tools.nvim'
-                if (lsp_name == "tsserver") then
-                    goto continue;
-                end
                 local settingsObj = { capabilities = capabilities };
                 if string.find(lsp_name, "lua_ls") then
                     settingsObj.settings = {
@@ -545,43 +541,12 @@ require("lazy").setup({
                 ::continue::
             end
 
-            ---@diagnostic disable-next-line: duplicate-set-field
-            vim.lsp.util.stylize_markdown = function(bufnr, contents, opts)
-                contents = vim.lsp.util._normalize_markdown(contents, {
-                    width = vim.lsp.util._make_floating_popup_size(contents, opts),
-                })
-                vim.bo[bufnr].filetype = "markdown";
-                vim.treesitter.start(bufnr);
-
-                local client_id = vim.lsp.start_client(lspconfig["markdown_oxide"]);
-                ---@diagnostic disable-next-line: param-type-mismatch
-                vim.lsp.buf_attach_client(bufnr, client_id);
-
-                vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, contents)
-
-                return contents
-            end
             vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
                 vim.lsp.handlers.hover, {
                     border = "single"
                 }
             );
         end
-    },
-    {
-        -- https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- Because standard tsserver with lspconfig is very slow on large codebases,
-        -- this plugin communicates with tsserver via its own protocol, which is
-        -- much faster
-        "pmizio/typescript-tools.nvim",
-        dependencies = {
-            "nvim-lua/plenary.nvim",
-            "neovim/nvim-lspconfig",
-        },
-        lazy = true,
-        event = { "BufReadPost", "BufNewFile" },
-        opts = {},
     },
     {
         -- https://github.com/mfussenegger/nvim-dap
@@ -730,8 +695,11 @@ require("lazy").setup({
         config = function()
             local trouble = require("trouble");
             vim.keymap.set("n", "<leader>lt", function() trouble.toggle("diagnostics") end);
-            vim.keymap.set("n", "<leader>la", function() vim.lsp.buf.code_action() end);
+            vim.keymap.set("n", "<leader>ln", function() trouble.next(); trouble.jump_only() end);
+            vim.keymap.set("n", "<leader>lp", function() trouble.prev(); trouble.jump_only() end);
             vim.keymap.set("n", "<leader>lr", function() trouble.toggle("lsp_references") end);
+
+            vim.keymap.set("n", "<leader>la", function() vim.lsp.buf.code_action() end);
             vim.keymap.set("n", "<leader>ls", function() vim.lsp.buf.rename() end);
             vim.keymap.set("n", "<leader>lf", function() vim.lsp.buf.format() end);
             vim.keymap.set("n", "<leader>i", function() vim.lsp.buf.hover() end);
@@ -1004,5 +972,49 @@ require("lazy").setup({
             });
             vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
         end,
+    },
+    {
+        "OXY2DEV/helpview.nvim",
+        lazy = false, -- Recommended
+        dependencies = {
+            "nvim-treesitter/nvim-treesitter"
+        }
+    },
+    {
+        "OXY2DEV/markview.nvim",
+        lazy = false, -- Recommended
+        dependencies = {
+            "nvim-treesitter/nvim-treesitter",
+            "nvim-tree/nvim-web-devicons"
+        }
+    },
+    {
+        -- Commands for moving/selecting parts of camelCaseWords (me, mb, mw)
+        -- https://github.com/chrisgrieser/nvim-spider
+        "chrisgrieser/nvim-spider",
+        lazy = true,
+        config = function()
+            local spider = require("spider");
+            spider.setup({
+                skipInsignificantPunctuation = false,
+            });
+        end,
+        keys = {
+            {
+                "me",
+                "<cmd>lua require('spider').motion('e')<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "mb",
+                "<cmd>lua require('spider').motion('b')<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "mw",
+                "<cmd>lua require('spider').motion('w')<CR>",
+                mode = { "n", "o", "x" },
+            },
+        },
     },
 }, lazyPmOptions);

@@ -33,8 +33,6 @@ vim.g.netrw_preview = 1; -- Open netrw preview on the right split side
 vim.g.netrw_liststyle = 1; -- By default show files with ls-like table
 vim.g.netrw_sort_options = "i"; -- Sort ignoring case
 vim.g.netrw_localcopydircmd = 'cp -r'; -- Enable recursive copying by default
--- Telescope.nvim not working correctly with this option
--- vim.g.netrw_keepdir = 0; -- Keep the current directory and the browsing directory synced, helps avoid the move files error
 vim.g.netrw_sort_sequence = [[[\/]\s]] -- Show directories first (sorting)
 vim.g.netrw_sizestyle = "H"; -- Human-readable files sizes
 
