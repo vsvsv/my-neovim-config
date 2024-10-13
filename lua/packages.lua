@@ -215,7 +215,11 @@ require("lazy").setup({
         "nvim-telescope/telescope.nvim",
         lazy = true,
         event = "VeryLazy",
-        dependencies = { "nvim-lua/plenary.nvim", "folke/trouble.nvim" },
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "folke/trouble.nvim",
+            "benfowler/telescope-luasnip.nvim",
+        },
         config = function()
             local open_with_trouble = require("trouble.sources.telescope").open;
             local telescope = require("telescope");
@@ -227,16 +231,18 @@ require("lazy").setup({
                     },
                     layout_strategy = "vertical",
                 },
-            })
+            });
+            telescope.load_extension('luasnip');
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
             -- vim.keymap.set("n", "<leader>fb", builtin.buffers, {}); -- disabled, using 'j-morano/buffer_manager.nvim' instead
             vim.keymap.set("n", "<leader>fh", builtin.help_tags, {});
-            vim.keymap.set("n", "<leader>ft", builtin.diagnostics, {});     -- "t" for trouble
-            vim.keymap.set("n", "<leader>fd", builtin.lsp_definitions, {}); -- "d" for definitions
-            vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});  -- "r" for references
+            vim.keymap.set("n", "<leader>ft", builtin.diagnostics, {});                  -- "t" for trouble
+            vim.keymap.set("n", "<leader>fd", builtin.lsp_definitions, {});              -- "d" for definitions
+            vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});               -- "r" for references
             vim.keymap.set({ "n", "v" }, "<leader>fs", builtin.grep_string, {});
+            vim.keymap.set("n", "<leader>fs", telescope.extensions.luasnip.luasnip, {}); -- "s" for snippets
         end
     },
     {
@@ -316,6 +322,29 @@ require("lazy").setup({
         end
     },
     {
+        -- https://github.com/L3MON4D3/LuaSnip
+        "L3MON4D3/LuaSnip",
+        version = "v2.*", -- Increment version to the latest stable to upgrade
+        lazy = true,
+        event = { "VeryLazy" },
+        -- dependencies = { "rafamadriz/friendly-snippets" },
+        build = vim.fn.has "win32" ~= 0 and "make install_jsregexp" or nil,
+        config = function(_, opts)
+            local luasnip = require('luasnip')
+            luasnip.config.set_config({
+                history = true,
+                updateevents = "TextChanged,TextChangedI",
+                enable_autosnippets = true,
+            });
+            if opts then luasnip.config.setup(opts) end
+            -- vim.tbl_map(
+            --     function(type) require("luasnip.loaders.from_" .. type).lazy_load() end,
+            --     { "vscode", "snipmate", "lua" }
+            -- );
+            require("luasnip.loaders.from_vscode").load({ paths = { "./snippets" } });
+        end,
+    },
+    {
         -- https://github.com/hrsh7th/nvim-cmp
         "hrsh7th/nvim-cmp",
         lazy = true,
@@ -328,10 +357,13 @@ require("lazy").setup({
             "hrsh7th/cmp-nvim-lsp-signature-help",
             "onsails/lspkind.nvim",
             "windwp/nvim-autopairs",
+            "L3MON4D3/LuaSnip",
+            "saadparwaiz1/cmp_luasnip",
         },
         config = function()
             local cmp = require("cmp");
             local lspkind = require("lspkind");
+            local luasnip = require('luasnip');
             local border = {
                 { "┌", "FloatBorder" },
                 { "─", "FloatBorder" },
@@ -349,9 +381,8 @@ require("lazy").setup({
             end
             cmp.setup({
                 snippet = {
-                    expand = function(args)            -- REQUIRED
-                        -- require("luasnip").lsp_expand(args.body)
-                        vim.snippet.expand(args.body); -- Native nvim snippets
+                    expand = function(args)
+                        luasnip.lsp_expand(args.body)
                     end,
                 },
                 window = {
@@ -369,19 +400,19 @@ require("lazy").setup({
                 },
                 mapping = cmp.mapping({
                     ["<Tab>"] = cmp.mapping(function(fallback)
-                        if vim.snippet.active({ filter = { jump_dir = 1 } }) then
-                            vim.snippet.jump(1)
+                        if cmp.visible() then
+                            cmp.select_next_item()
+                        elseif luasnip.locally_jumpable(1) then
+                            luasnip.jump(1)
                         else
-                            if cmp.visible() then
-                                cmp.confirm({ select = true });
-                            else
-                                fallback();
-                            end
+                            fallback()
                         end
                     end, { "i", "s", "c", }),
                     ["<S-Tab>"] = cmp.mapping(function(fallback)
-                        if vim.snippet.active({ filter = { jump_dir = -1 } }) then
-                            vim.snippet.jump(-1)
+                        if cmp.visible() then
+                            cmp.select_prev_item()
+                        elseif luasnip.locally_jumpable(-1) then
+                            luasnip.jump(-1)
                         else
                             fallback()
                         end
@@ -395,6 +426,7 @@ require("lazy").setup({
                 }),
                 vim.keymap.set("n", "<C-c>", cmp.mapping.complete),
                 sources = cmp.config.sources({
+                    { name = "luasnip" },
                     {
                         name = "nvim_lsp",
                         option = {
@@ -404,7 +436,6 @@ require("lazy").setup({
                         },
                     },
                     { name = "nvim_lsp_sinature_help" },
-                    -- { name = "luasnip" }, -- For luasnip users.
                     { name = "buffer" },
                     { name = "mdlink" },
                 }, {
@@ -440,7 +471,7 @@ require("lazy").setup({
                 ),
                 matching = { disallow_symbol_nonprefix_matching = false },
             })
-            local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+            local cmp_autopairs = require("nvim-autopairs.completion.cmp");
             cmp.event:on(
                 "confirm_done",
                 cmp_autopairs.on_confirm_done()
@@ -695,8 +726,12 @@ require("lazy").setup({
         config = function()
             local trouble = require("trouble");
             vim.keymap.set("n", "<leader>lt", function() trouble.toggle("diagnostics") end);
-            vim.keymap.set("n", "<leader>ln", function() trouble.next(); trouble.jump_only() end);
-            vim.keymap.set("n", "<leader>lp", function() trouble.prev(); trouble.jump_only() end);
+            vim.keymap.set("n", "<leader>ln", function()
+                trouble.next(); trouble.jump_only()
+            end);
+            vim.keymap.set("n", "<leader>lp", function()
+                trouble.prev(); trouble.jump_only()
+            end);
             vim.keymap.set("n", "<leader>lr", function() trouble.toggle("lsp_references") end);
 
             vim.keymap.set("n", "<leader>la", function() vim.lsp.buf.code_action() end);
@@ -772,7 +807,10 @@ require("lazy").setup({
         event = "VeryLazy",
         cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
         ft = { "markdown" },
-        build = function() vim.fn["mkdp#util#install"]() end,
+        build = function(plugin)
+            vim.fn["mkdp#util#install"]()
+            vim.cmd("!cd " .. plugin.dir .. " && cd app && npx --yes yarn install && npm install")
+        end,
         config = function()
             vim.api.nvim_create_user_command("MdOpen", "MarkdownPreviewToggle", {});
         end
