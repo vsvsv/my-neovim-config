@@ -510,7 +510,8 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
-                "gopls",
+                -- "gopls",
+                "pyright",
             };
 
             mason.setup({
@@ -563,8 +564,7 @@ require("lazy").setup({
                 if string.find(lsp_name, "clangd") then
                     settingsObj.cmd = {
                         "clangd",
-                        -- Use webkit lint style by default (indent with 4 spaces, etc)
-                        "--fallback-style=webkit",
+                        "--fallback-style=InheritParentConfig",
                         "--function-arg-placeholders=0",
                     };
                 end

@@ -64,7 +64,7 @@
         "description": "Insert the MIT license text with copyright\n"
     },
     "GPLv3 header": {
-        "prefix": "gpl3h",
+        "prefix": "gpl",
         "body": [
             "${LINE_COMMENT} ${1:project_name}",
             "${LINE_COMMENT} Copyright (C) ${CURRENT_YEAR} Vsevolod Platunov <vsevolodplatunov@gmail.com>",
@@ -86,7 +86,7 @@
         "description": "Insert the GPLv3 licence header text with copyright\n"
     },
     "GPLv3 full text (long)": {
-        "prefix": "gpl3full",
+        "prefix": "gplfull",
         "body": [
             "                     GNU GENERAL PUBLIC LICENSE",
             "                       Version 3, 29 June 2007",
