@@ -725,6 +725,13 @@ require("lazy").setup({
         event = { "VeryLazy" },
         config = function()
             local trouble = require("trouble");
+            trouble.setup({
+                win = {
+                    wo = {
+                        wrap = true,
+                    },
+                },
+            });
             vim.keymap.set("n", "<leader>lt", function() trouble.toggle("diagnostics") end);
             vim.keymap.set("n", "<leader>ln", function()
                 trouble.next(); trouble.jump_only()
