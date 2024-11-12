@@ -35,11 +35,11 @@ source:
       bin: zls
     - target: win_x86
       files:
-        zls: https://zigtools-releases.nyc3.digitaloceanspaces.com/zls/master/x86-windows/zls.exe
+        zls.exe: https://zigtools-releases.nyc3.digitaloceanspaces.com/zls/master/x86-windows/zls.exe
       bin: zls.exe
     - target: win_x64
       files:
-        zls: https://zigtools-releases.nyc3.digitaloceanspaces.com/zls/master/x86_64-windows/zls.exe
+        zls.exe: https://zigtools-releases.nyc3.digitaloceanspaces.com/zls/master/x86_64-windows/zls.exe
       bin: zls.exe
   build:
 

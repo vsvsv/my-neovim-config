@@ -519,7 +519,7 @@ require("lazy").setup({
                 registries = {
                     "github:mason-org/mason-registry",
                     -- add local registry with nightly version of ZLS
-                    "file:~/.config/nvim/mason-custom-registry"
+                    "file:" .. vim.fn.stdpath("config") .. "/mason-custom-registry"
                 },
             });
 
