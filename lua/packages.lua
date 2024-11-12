@@ -106,6 +106,7 @@ require("lazy").setup({
             local configs = require("nvim-treesitter.configs")
             configs.setup({
                 ensure_installed = "all",
+                ignore_install= { "systemverilog" },
                 sync_install = false,
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -866,18 +867,19 @@ require("lazy").setup({
         end
     },
     {
-        -- https://github.com/willothy/moveline.nvim
-        "willothy/moveline.nvim",
+        -- https://github.com/fedepujol/move.nvim 
+        "fedepujol/move.nvim",
         lazy = true,
         event = "VeryLazy",
-        build = "make",
         config = function()
-            local moveline = require("moveline")
-            vim.keymap.set("n", "<C-k>", moveline.up)
-            vim.keymap.set("n", "<C-j>", moveline.down)
-            vim.keymap.set("v", "<C-k>", moveline.block_up)
-            vim.keymap.set("v", "<C-j>", moveline.block_down)
-        end,
+            local move = require("move");
+            move.setup({});
+            vim.keymap.set("n", "<C-k>", ":MoveLine(-1)<CR>");
+            vim.keymap.set("n", "<C-j>", ":MoveLine(1)<CR>");
+
+            vim.keymap.set("v", "<C-k>", ":MoveBlock(-1)<CR>");
+            vim.keymap.set("v", "<C-j>", ":MoveBlock(1)<CR>");
+        end
     },
     {
         -- https://github.com/Wansmer/treesj

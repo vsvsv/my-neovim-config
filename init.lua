@@ -6,6 +6,9 @@ require("core_config");
 local colorscheme = require("colorscheme");
 require("packages");
 
+-- Set English regardless of system language
+vim.cmd("language en_US");
+
 -- Use Catppuccin theme (only truecolor terminals)
 vim.cmd("colorscheme catppuccin");
 colorscheme.deemphasize_dots_at_beginning(); -- default color for leading dots (spaces) is annoying, decrease it
