@@ -56,13 +56,13 @@ require("lazy").setup({
         -- https://github.com/nvim-neo-tree/neo-tree.nvim
         "nvim-neo-tree/neo-tree.nvim",
         branch = "v3.x",
-        lazy = true,
+        lazy = false,
         event = "UIEnter",
         dependencies = {
             "nvim-lua/plenary.nvim",
-            "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+            "nvim-tree/nvim-web-devicons",
             "MunifTanjim/nui.nvim",
-            "3rd/image.nvim",              -- Optional image support in preview window: See `# Preview Mode` for more information
+            "3rd/image.nvim",
         },
         config = function()
             require("neo-tree").setup({
@@ -78,7 +78,8 @@ require("lazy").setup({
                     }
                 },
                 filesystem = {
-                    hijack_netrw_behaviour = "open_current",
+                    hijack_netrw_behavior = "open_current",
+                    group_empty_dirs = true,
                     check_gitignore_in_search = false,
                     filtered_items = {
                         visible = true, -- Show all hidden files dimmed out
@@ -94,7 +95,8 @@ require("lazy").setup({
                     },
                 },
             });
-            vim.keymap.set('n', '<Leader>e', '<cmd>Neotree position=current toggle=true reveal=true<cr>'); -- Open last directory with neotree by Spc+e
+            -- Open last directory with neotree by Spc+e
+            vim.keymap.set('n', '<Leader>e', '<cmd>Neotree position=current toggle=true reveal=true<cr>');
         end
     },
     {
@@ -106,7 +108,7 @@ require("lazy").setup({
             local configs = require("nvim-treesitter.configs")
             configs.setup({
                 ensure_installed = "all",
-                ignore_install= { "systemverilog" },
+                ignore_install = { "systemverilog" },
                 sync_install = false,
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -867,7 +869,7 @@ require("lazy").setup({
         end
     },
     {
-        -- https://github.com/fedepujol/move.nvim 
+        -- https://github.com/fedepujol/move.nvim
         "fedepujol/move.nvim",
         lazy = true,
         event = "VeryLazy",

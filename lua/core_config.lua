@@ -45,12 +45,17 @@ vim.keymap.set('v', 'y', 'ygv<Esc>'); -- Yank in visual mode without the cursor 
 vim.keymap.set('n', '<Leader>n', '<cmd>noh<cr>'); -- Reset current search pattern with Spc-h
 vim.keymap.set('n', '<Leader>o', ':<c-u>call append(line("."), repeat([""], v:count1))<cr>'); -- Insert blank line after
 vim.keymap.set('n', '<Leader>O', ':<c-u>call append(line(".")-1, repeat([""], v:count1))<cr>'); -- Insert blank line before
-vim.keymap.set('n', '<c-a>', 'a <ESC>r'); -- Insert single character in normal mode with Ctrl+A
 vim.keymap.set('n', '<c-u>', '<c-u>zz'); -- Always center cursor after half-page scroll
 vim.keymap.set('n', '<c-d>', '<c-d>zz'); -- Always center cursor after half-page scroll
 vim.keymap.set('n', '<Leader>vn', function() -- Leader-[v]isual-[n]umber – toggle relative line numbers
     vim.wo.relativenumber = not vim.wo.relativenumber;
 end);
+
+-- Remap Ctrl+HJKL to arrows in insert mode
+vim.keymap.set('i', '<c-h>', '<Left>');
+vim.keymap.set('i', '<c-l>', '<Right>');
+vim.keymap.set('i', '<c-j>', '<Down>');
+vim.keymap.set('i', '<c-k>', '<Up>');
 
 -- "*y -> "*p  – yank and paste using native OS clipboard (works in different termninal windows)
 
