@@ -5,6 +5,7 @@
 require("core_config");
 local colorscheme = require("colorscheme");
 require("packages");
+require("neovide");
 
 -- Set English regardless of system language
 vim.cmd("language en_US");
