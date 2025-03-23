@@ -151,34 +151,23 @@ require("lazy").setup({
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
             local colors = {
-                fg     = getHlColor("@variable", "foreground"),
-                bg     = "NONE",
-                green  = getHlColor("String", "foreground"),
-                purple = getHlColor("Function", "foreground"),
-                red1   = getHlColor("ErrorMsg", "foreground"),
-                gray1  = getHlColor("StatusLineNC", "foreground"),
-                gray2  = getHlColor("EndOfBuffer", "foreground"),
-                gray3  = getHlColor("SpecialKey", "foreground"),
+                fg          = getHlColor("@variable", "foreground"),
+                bg          = "NONE",
+                inactive_bg = "#181820",
+                gray1       = getHlColor("StatusLineNC", "foreground"),
+                gray2       = getHlColor("EndOfBuffer", "foreground"),
+                gray3       = getHlColor("SpecialKey", "foreground"),
             };
             local my_theme = {
                 normal = {
-                    a = { fg = colors.bg, bg = colors.gray3, gui = "bold" },
-                    b = { fg = "#ffffff", bg = colors.gray1 },
-                    c = { fg = colors.fg, bg = colors.gray3 },
-                },
-                insert = {
-                    a = { fg = colors.gray3, bg = colors.green, gui = "bold" },
-                },
-                visual = {
-                    a = { fg = colors.gray3, bg = colors.purple, gui = "bold" },
-                },
-                replace = {
-                    a = { fg = colors.gray3, bg = colors.red1, gui = "bold" },
+                    a = { fg = colors.bg, bg = colors.inactive_bg, gui = "bold" },
+                    b = { fg = colors.fg, bg = colors.gray2 },
+                    c = { fg = colors.fg, bg = colors.inactive_bg },
                 },
                 inactive = {
-                    a = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
-                    b = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
-                    c = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
+                    a = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
+                    b = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
+                    c = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
                 },
             };
             local showGitStatus = function()
@@ -198,7 +187,7 @@ require("lazy").setup({
                     -- theme = "catppuccin",
                 },
                 sections = {
-                    lualine_a = { "mode" },
+                    lualine_a = {},
                     lualine_b = { "branch", showGitStatus, "diagnostics" },
                     lualine_c = { {
                         my_fn,
@@ -209,6 +198,7 @@ require("lazy").setup({
                     lualine_x = { "encoding", "fileformat" },
                     lualine_y = { "filetype" },
                     lualine_z = { { "datetime", style = "%H:%M" }, },
+
                 },
             });
         end
@@ -301,7 +291,6 @@ require("lazy").setup({
         -- https://github.com/ThePrimeagen/harpoon
         "ThePrimeagen/harpoon",
         branch = "harpoon2",
-        commit = "a38be6e", -- TODO: change this when harpoon2 branch stabilizes
         lazy = true,
         event = "VeryLazy",
         dependencies = { "nvim-lua/plenary.nvim" },
@@ -309,7 +298,7 @@ require("lazy").setup({
             local harpoon = require("harpoon");
             harpoon:setup({});
 
-            vim.keymap.set("n", "<leader>a", function() harpoon:list():append() end)
+            vim.keymap.set("n", "<leader>a", function() harpoon:list():add() end)
             vim.keymap.set("n", "<leader>h", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
 
             vim.keymap.set("n", "<leader>1", function() harpoon:list():select(1) end)
@@ -501,10 +490,24 @@ require("lazy").setup({
             local nvim_cmp_lsp = require("cmp_nvim_lsp");
             local capabilities = nvim_cmp_lsp.default_capabilities();
 
+            -- Use `zls_master` Mason package for Zig language server.
+            -- If set to `true`, Mason will automatically install and configure ZLS.
+            --
+            -- If set to `false`, `zvm` command should be installed manually and available on the system.
+            -- It can be installed using ZVM:
+            --     `zvm i --zls master` (or use any other version instead of `master`)
+            --
+            -- When using Zig master (nightly), ZLS version from `zls_master` can be out of sync
+            -- with actual Zig version, which can result in incomplete functionality of ZLS.
+            -- To avoid this behavior, set this option to `false`,
+            -- and install matching `zig` and `zls` versions with ZVM using snippet above.
+            -- When using system-wide ZLS,
+            -- remove the Mason version located at `~/.local/share/nvim/mason/bin/zls`.
+            local use_zls_from_mason = false;
+
             local required_lsps = {
                 "lua_ls",
                 "vtsls",
-                -- "zls",
                 "markdown_oxide",
                 "clangd",
                 "jsonls",
@@ -513,24 +516,26 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
-                -- "gopls",
                 "pyright",
+                -- "gopls",
             };
 
             mason.setup({
                 registries = {
                     "github:mason-org/mason-registry",
-                    -- add local registry with nightly version of ZLS
+                    -- add local registry with latest version of ZLS
                     "file:~/.config/nvim/mason-custom-registry"
                 },
             });
+
 
             registry.refresh(function()
                 if not registry.is_installed("yq") then
                     vim.cmd("MasonInstall yq"); -- needed for local mason registry
                 end
-                if not registry.is_installed("zls_master") then
-                    vim.cmd("MasonInstall zls_master"); -- nigtly ZLS from local registry
+
+                if (not registry.is_installed("zls_master")) and use_zls_from_mason then
+                    vim.cmd("MasonInstall zls_master"); -- latest ZLS from local Mason registry
                 end
             end);
 
@@ -1000,14 +1005,18 @@ require("lazy").setup({
         end,
     },
     {
-        -- https://github.com/saifulapm/chartoggle.nvim
         -- Toogle comma(,), semicolon(;) or other character in neovim end of line from anywhere in the line
-        'saifulapm/chartoggle.nvim',
-        opts = {
-            leader = '<Leader>',            -- you can use any key as Leader
-            keys = { ',', ';' }             -- Which keys will be toggle end of the line
+        -- https://github.com/saifulapm/commasemi.nvim
+        "saifulapm/commasemi.nvim",
+        keys = {
+            { "<Leader>,", desc = "Toggle comma" },
+            { "<Leader>;", desc = "Toggle semicolon" },
         },
-        keys = { '<Leader>,', '<Leader>;' } -- Lazy loaded
+        opts = {
+            leader = "<Leader>",
+            keymaps = true,
+            commands = false,
+        },
     },
     {
         -- https://github.com/j-morano/buffer_manager.nvim
@@ -1035,7 +1044,15 @@ require("lazy").setup({
         dependencies = {
             "nvim-treesitter/nvim-treesitter",
             "nvim-tree/nvim-web-devicons"
-        }
+        },
+        config = function ()
+            local mkv = require("markview");
+            mkv.setup({
+                preview = {
+                    enable_hybrid_mode = true,
+                },
+            });
+        end
     },
     {
         -- Commands for moving/selecting parts of camelCaseWords (me, mb, mw)
