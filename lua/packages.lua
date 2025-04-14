@@ -229,7 +229,6 @@ require("lazy").setup({
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
-            -- vim.keymap.set("n", "<leader>fb", builtin.buffers, {}); -- disabled, using 'j-morano/buffer_manager.nvim' instead
             vim.keymap.set("n", "<leader>fh", builtin.help_tags, {});
             vim.keymap.set("n", "<leader>ft", builtin.diagnostics, {});                  -- "t" for trouble
             vim.keymap.set("n", "<leader>fd", builtin.lsp_definitions, {});              -- "d" for definitions
@@ -329,10 +328,6 @@ require("lazy").setup({
                 enable_autosnippets = true,
             });
             if opts then luasnip.config.setup(opts) end
-            -- vim.tbl_map(
-            --     function(type) require("luasnip.loaders.from_" .. type).lazy_load() end,
-            --     { "vscode", "snipmate", "lua" }
-            -- );
             require("luasnip.loaders.from_vscode").load({ paths = { "./snippets" } });
         end,
     },
@@ -340,7 +335,7 @@ require("lazy").setup({
         -- AI Slop Companion: chat, inline actions, etc (but not autocompletion)
         -- https://github.com/olimorris/codecompanion.nvim
         "olimorris/codecompanion.nvim",
-        lazy = false,
+        lazy = true,
         event = "VeryLazy",
         dependencies = {
             "nvim-lua/plenary.nvim",
@@ -655,7 +650,6 @@ require("lazy").setup({
                     };
                 end
                 lspconfig[lsp_name].setup(settingsObj);
-                ::continue::
             end
 
             vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
@@ -1097,17 +1091,36 @@ require("lazy").setup({
         },
     },
     {
-        -- https://github.com/j-morano/buffer_manager.nvim
-        'j-morano/buffer_manager.nvim',
-        lazy = true,
+        -- Add visual indicator for yanking/pasting and undo/redo
+        -- https://github.com/rachartier/tiny-glimmer.nvim
+        "rachartier/tiny-glimmer.nvim",
+        lazy = false,
         event = "VeryLazy",
-        config = function()
-            local buf_mgr_ui = require("buffer_manager.ui");
-            require("buffer_manager").setup({
-                width = 0.9,
-            });
-            vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
-        end,
+        priority = 10, -- Needs to be a really low priority, to catch others plugins keybindings.
+        opts = {
+            overwrite = {
+                paste = {
+                    enabled = true,
+                    default_animation = {
+                        name = "reverse_fade",
+                        settings = {
+                            max_duration = 200,
+                            min_duration = 200,
+                        },
+                    },
+                },
+                undo = { enabled = true },
+                redo = {
+                    enabled = true,
+                    default_animation = {
+                        name = "fade",
+                        settings = {
+                            from_color = "#5e4031",
+                        },
+                    },
+                },
+            },
+        },
     },
     {
         "OXY2DEV/helpview.nvim",
@@ -1169,5 +1182,123 @@ require("lazy").setup({
                 mode = { "n", "o", "x" },
             },
         },
+    },
+    {
+        -- Extend the functionality of C-a/C-x (increment/decrement) for other data types
+        -- https://github.com/monaqa/dial.nvim
+        "monaqa/dial.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local augend = require("dial.augend")
+            require("dial.config").augends:register_group {
+                default = {
+                    augend.integer.alias.decimal,  -- nonnegative decimal number (0, 1, 2, 3, ...)
+                    augend.integer.alias.hex,      -- nonnegative hex number  (0x01, 0x1a1f, etc.)
+                    augend.date.alias["%Y-%m-%d"], -- date (2022-02-17, etc.)
+                    augend.constant.alias.bool,
+                    augend.constant.new {
+                        elements = { "and", "or" },
+                        word = true,   -- if false, "sand" is incremented into "sor", "doctor" into "doctand", etc.
+                        cyclic = true, -- "or" is incremented into "and".
+                    },
+                    augend.constant.new {
+                        elements = { "undefined", "null" },
+                        word = true,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "max", "min" },
+                        word = true,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "&&", "||" },
+                        word = false,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "==", "!=" },
+                        word = false,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "===", "!==" },
+                        word = false,
+                        cyclic = true,
+                    },
+                },
+            };
+        end,
+        keys = {
+            {
+                "<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "normal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "normal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "g<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "gnormal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "g<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "gnormal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "visual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "visual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "g<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "gvisual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "g<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "gvisual")<CR>',
+                mode = { "v" },
+            },
+        },
+    },
+    {
+        -- Swap sibling arguments, list items, etc on the same line
+        -- https://github.com/Wansmer/sibling-swap.nvim
+        'Wansmer/sibling-swap.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require('sibling-swap').setup({
+                keymaps = {
+                    ['<c-l>'] = 'swap_with_right',
+                    ['<c-h>'] = 'swap_with_left',
+                },
+            });
+        end,
+    },
+    {
+        -- https://github.com/j-morano/buffer_manager.nvim
+        'j-morano/buffer_manager.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local buf_mgr_ui = require("buffer_manager.ui");
+            require("buffer_manager").setup({
+                width = 0.9,
+            });
+            vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
+        end,
     },
 }, lazyPmOptions);
