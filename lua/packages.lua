@@ -337,6 +337,83 @@ require("lazy").setup({
         end,
     },
     {
+        -- AI Slop Companion: chat, inline actions, etc (but not autocompletion)
+        -- https://github.com/olimorris/codecompanion.nvim
+        "olimorris/codecompanion.nvim",
+        lazy = false,
+        event = "VeryLazy",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "nvim-treesitter/nvim-treesitter",
+        },
+        config = function()
+            require("codecompanion").setup({
+                strategies = {
+                    chat = {
+                        adapter = "gemini",
+                        keymaps = {
+                            close = {
+                                modes = { n = "<C-x>", i = "<C-x>" },
+                            },
+                        },
+                    },
+                    inline = {
+                        adapter = "gemini",
+                    },
+                    cmd = {
+                        adapter = "gemini",
+                    },
+                },
+                display = {
+                    chat = {
+                        window = {
+                            layout = "buffer",
+                        },
+                    },
+                    action_palette = {
+                        prompt = "LLM Prompt: ",
+                    },
+                    diff = {
+                        layout = "vertical",
+                    },
+                },
+            });
+        end,
+        keys = {
+            {
+                "<Leader>ct",
+                "<cmd>CodeCompanionChat Toggle<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "<Leader>ca",
+                "<cmd>CodeCompanionActions<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "<Leader>cc",
+                "<cmd>CodeCompanion<CR>",
+                mode = { "n", "o", "x", "v" },
+            },
+        },
+    },
+    {
+        -- AI Slop Companion: autocompletion suggenstions
+        -- https://github.com/milanglacier/minuet-ai.nvim
+        --
+        -- (Triggers only by Ctrl+' in insert mode, see config for 'nvim-cmp')
+        'milanglacier/minuet-ai.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require('minuet').setup {
+                provider = 'gemini',
+                debounce = 0,
+                add_single_line_entry = false,
+            }
+        end,
+    },
+    {
         -- https://github.com/hrsh7th/nvim-cmp
         "hrsh7th/nvim-cmp",
         lazy = true,
@@ -391,6 +468,7 @@ require("lazy").setup({
                     },
                 },
                 mapping = cmp.mapping({
+                    ["<C-'>"] = require('minuet').make_cmp_map(),
                     ["<Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_next_item()
@@ -1045,14 +1123,23 @@ require("lazy").setup({
             "nvim-treesitter/nvim-treesitter",
             "nvim-tree/nvim-web-devicons"
         },
-        config = function ()
-            local mkv = require("markview");
-            mkv.setup({
-                preview = {
-                    enable_hybrid_mode = true,
-                },
-            });
-        end
+        opts = {
+            preview = {
+                filetypes = { "markdown", "quarto", "rmd", "typst", "codecompanion" },
+                enable_hybrid_mode = true,
+                ignore_buftypes = {},
+                condition = function(buffer)
+                    local ft, bt = vim.bo[buffer].ft, vim.bo[buffer].bt;
+                    if bt == "nofile" and ft == "codecompanion" then
+                        return true;
+                    elseif bt == "nofile" then
+                        return false;
+                    else
+                        return true;
+                    end
+                end
+            },
+        },
     },
     {
         -- Commands for moving/selecting parts of camelCaseWords (me, mb, mw)
