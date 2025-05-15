@@ -396,15 +396,29 @@ require("lazy").setup({
         -- AI Slop Companion: autocompletion suggenstions
         -- https://github.com/milanglacier/minuet-ai.nvim
         --
-        -- (Triggers only by Ctrl+' in insert mode, see config for 'nvim-cmp')
+        -- (Triggers only by Ctrl+\ in insert mode, see config for 'nvim-cmp')
         'milanglacier/minuet-ai.nvim',
         lazy = true,
         event = "VeryLazy",
         config = function()
             require('minuet').setup {
                 provider = 'gemini',
-                debounce = 0,
+                gemini = {
+                    model = 'gemini-2.5-flash',
+                    stream = true,
+                    api_key = 'GEMINI_API_KEY',
+                    optional = {
+                        maxOutputTokens = 256,
+                        thinkingConfig = {
+                            thinkingBudget = 0,
+                        },
+                    },
+                },
                 add_single_line_entry = false,
+                n_completions = 5,
+                cmp = {
+                    enable_auto_complete = false,
+                },
             }
         end,
     },
@@ -488,9 +502,11 @@ require("lazy").setup({
                     ["<C-e>"] = cmp.mapping.abort(),
                     ["<C-u>"] = cmp.mapping.abort(),
                     ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                    ["<C-\\>"] = require('minuet').make_cmp_map(),
                 }),
                 vim.keymap.set("n", "<C-c>", cmp.mapping.complete),
                 sources = cmp.config.sources({
+                    { name = "minuet" },
                     { name = "luasnip" },
                     {
                         name = "nvim_lsp",
@@ -512,6 +528,14 @@ require("lazy").setup({
                             -- vim_item.menu = string.sub(vim_item.menu, 1, 16);
                             vim_item.menu = nil;
                         end
+
+                        -- Add fancy meny symbol for LLM-generated suggenstions
+                        if vim.tbl_contains({ 'minuet' }, entry.source.name) then
+                            vim_item.menu = "[󰙴]"
+                            vim_item.menu_hl_group = "@text.title"
+                            return lspkind.cmp_format({ with_text = false })(entry, vim_item)
+                        end
+
                         return lspkind.cmp_format({
                             mode = "symbol",
                             maxwidth = 25, -- prevent the popup from showing more than 20 chars
@@ -522,6 +546,9 @@ require("lazy").setup({
                 },
                 completion = {
                     completeopt = "menu,menuone,noinsert",
+                },
+                performance = {
+                    fetching_timeout = 2000,
                 }
             });
             cmp.setup.cmdline({ "/", "?" }, {
@@ -589,7 +616,8 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
-                "pyright",
+                "basedpyright",
+                "ruff",
                 -- "gopls",
             };
 
@@ -648,6 +676,19 @@ require("lazy").setup({
                         "--fallback-style=InheritParentConfig",
                         "--function-arg-placeholders=0",
                     };
+                end
+                if string.find(lsp_name, "basedpyright") then
+                    settingsObj.on_new_config = function(config, root_dir)
+                        local env = vim.trim(
+                            vim.fn.system('cd "' .. root_dir .. '"; poetry env info -p 2>/dev/null')
+                        )
+                        if string.len(env) > 0 then
+                            config.settings.python = {
+                                pythonPath = env .. '/bin/python'
+                            }
+                            config.settings.basedpyright.typeCheckingMode = "off"
+                        end
+                    end
                 end
                 lspconfig[lsp_name].setup(settingsObj);
             end
@@ -1280,12 +1321,25 @@ require("lazy").setup({
         lazy = true,
         event = "VeryLazy",
         config = function()
-            require('sibling-swap').setup({
-                keymaps = {
-                    ['<c-l>'] = 'swap_with_right',
-                    ['<c-h>'] = 'swap_with_left',
-                },
+            local sibling_swap = require('sibling-swap');
+            local keymaps = {
+                ['<C-l>'] = 'swap_with_right',
+                ['<C-h>'] = 'swap_with_left',
+            };
+            sibling_swap.setup({
+                use_default_keymaps = false,
+                highlight_node_at_cursor = true,
+                allow_interline_swaps = false,
+                keymaps = keymaps,
             });
+            for keymap, action in pairs(keymaps) do
+                vim.keymap.set(
+                    'n',
+                    keymap,
+                    sibling_swap[action],
+                    { desc = 'sibling-swap: ' .. action }
+                )
+            end
         end,
     },
     {

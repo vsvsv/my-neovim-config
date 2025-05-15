@@ -37,6 +37,7 @@
   "neodev.nvim": { "branch": "main", "commit": "46aa467dca16cf3dfe27098042402066d2ae242d" },
   "neogen": { "branch": "main", "commit": "05d754004da8c89115b291f2a23ca530a8cac8fd" },
   "neogit": { "branch": "master", "commit": "97f83f1dc51dee41e08e3c7a8adf00e1083e3178" },
+  "neopyter": { "branch": "master", "commit": "8716511f2a0d1500ba8f4adeb05bbb432a080bac" },
   "nui.nvim": { "branch": "main", "commit": "8d3bce9764e627b62b07424e0df77f680d47ffdb" },
   "nvim-autopairs": { "branch": "master", "commit": "4d74e75913832866aa7de35e4202463ddf6efd1b" },
   "nvim-cmp": { "branch": "main", "commit": "b5311ab3ed9c846b585c0c15b7559be131ec4be9" },
@@ -58,5 +59,6 @@
   "tiny-glimmer.nvim": { "branch": "main", "commit": "70234ad3d193a187c81cb16007100b790c9801fc" },
   "toggleterm.nvim": { "branch": "main", "commit": "50ea089fc548917cc3cc16b46a8211833b9e3c7c" },
   "treesj": { "branch": "main", "commit": "f4049f8ba2177e7c5c03fb9e34d4e039c685d744" },
-  "trouble.nvim": { "branch": "main", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" }
+  "trouble.nvim": { "branch": "main", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" },
+  "websocket.nvim": { "branch": "main", "commit": "8a096d51c957557f939e296c4937f27d5dc596d5" }
 }
