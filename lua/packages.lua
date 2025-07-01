@@ -102,13 +102,17 @@ require("lazy").setup({
     {
         -- https://github.com/nvim-treesitter/nvim-treesitter
         "nvim-treesitter/nvim-treesitter",
+        branch = "master",
         build = ":TSUpdate",
         event = { "BufReadPost", "BufNewFile" },
+        dependencies = {
+            "OXY2DEV/markview.nvim",
+        },
         config = function()
             local configs = require("nvim-treesitter.configs")
             configs.setup({
                 ensure_installed = "all",
-                ignore_install = { "systemverilog" },
+                ignore_install = { "systemverilog", "ipkg" },
                 sync_install = false,
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -616,9 +620,13 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
-                "basedpyright",
-                "ruff",
-                -- "gopls",
+                "glsl_analyzer",
+                "bashls",
+                "pylsp",
+                "cmake",
+                "opencl_ls",
+                "wgsl_analyzer",
+                "java_language_server",
             };
 
             mason.setup({
@@ -640,7 +648,7 @@ require("lazy").setup({
                 end
             end);
 
-            mason_lspconfig.setup({ ensure_installed = required_lsps });
+            mason_lspconfig.setup({ ensure_installed = required_lsps, automatic_enable = false });
             neodev.setup({
                 library = { plugins = { "nvim-dap-ui" }, types = true },
             });
@@ -1174,7 +1182,6 @@ require("lazy").setup({
         "OXY2DEV/markview.nvim",
         lazy = false, -- Recommended
         dependencies = {
-            "nvim-treesitter/nvim-treesitter",
             "nvim-tree/nvim-web-devicons"
         },
         opts = {
