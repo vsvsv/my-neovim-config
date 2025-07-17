@@ -107,6 +107,7 @@ require("lazy").setup({
         event = { "BufReadPost", "BufNewFile" },
         dependencies = {
             "OXY2DEV/markview.nvim",
+            "OXY2DEV/helpview.nvim",
         },
         config = function()
             local configs = require("nvim-treesitter.configs")
@@ -121,18 +122,6 @@ require("lazy").setup({
                 pattern = { [".*/.*%.mm"] = "cpp" },
             });
         end
-    },
-    {
-        -- https://github.com/folke/flash.nvim
-        "folke/flash.nvim",
-        event = "VeryLazy",
-        opts = {},
-        -- stylua: ignore
-        keys = {
-            { "s",     mode = { "n", "x", "o" }, function() require("flash").jump() end,       desc = "Flash" },
-            { "S",     mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-            { "<c-s>", mode = { "c" },           function() require("flash").toggle() end,     desc = "Toggle Flash Search" },
-        },
     },
     {
         -- https://github.com/numToStr/Comment.nvim -- comment and uncomment with "gc"
@@ -216,6 +205,7 @@ require("lazy").setup({
             "nvim-lua/plenary.nvim",
             "folke/trouble.nvim",
             "benfowler/telescope-luasnip.nvim",
+            'davidgranstrom/telescope-scdoc.nvim',
         },
         config = function()
             local open_with_trouble = require("trouble.sources.telescope").open;
@@ -230,6 +220,7 @@ require("lazy").setup({
                 },
             });
             telescope.load_extension('luasnip');
+            telescope.load_extension('scdoc');
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
@@ -239,6 +230,7 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});               -- "r" for references
             vim.keymap.set({ "n", "v" }, "<leader>fs", builtin.grep_string, {});
             vim.keymap.set("n", "<leader>fs", telescope.extensions.luasnip.luasnip, {}); -- "s" for snippets
+            vim.keymap.set("n", "<leader>fk", telescope.extensions.scdoc.scdoc, {});
         end
     },
     {
@@ -626,7 +618,7 @@ require("lazy").setup({
                 "cmake",
                 "opencl_ls",
                 "wgsl_analyzer",
-                "java_language_server",
+                "yamlls",
             };
 
             mason.setup({
@@ -1103,6 +1095,7 @@ require("lazy").setup({
         },
     },
     {
+        -- https://github.com/danymat/neogen
         "danymat/neogen",
         lazy = true,
         event = "VeryLazy",
@@ -1174,9 +1167,6 @@ require("lazy").setup({
     {
         "OXY2DEV/helpview.nvim",
         lazy = false, -- Recommended
-        dependencies = {
-            "nvim-treesitter/nvim-treesitter"
-        }
     },
     {
         "OXY2DEV/markview.nvim",
@@ -1361,5 +1351,79 @@ require("lazy").setup({
             });
             vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
         end,
+    },
+    {
+        -- https://github.com/davidgranstrom/scnvim
+        'davidgranstrom/scnvim',
+        enabled = false,
+        lazy = true,
+        event = "VeryLazy",
+        ft = 'supercollider',
+        config = function()
+            local scnvim = require('scnvim');
+            local map = scnvim.map;
+            local map_expr = scnvim.map_expr;
+            scnvim.setup({
+                ensure_installed = true,
+                keymaps = {
+                    ['<Leader>kt'] = map('postwin.toggle'),
+                    ['<Leader-kc>'] = map('postwin.clear', { 'n', 'i' }),
+                    -- ['<C-=>'] = map('editor.send_line', { 'i', 'n' }),
+                    ['<C-=>'] = {
+                        map('editor.send_block', { 'i', 'n' }),
+                        map('editor.send_selection', 'x'),
+                    },
+                    ['<Leader-ks>'] = map('signature.show', { 'n', 'i' }),
+                    ['<Leader>kk'] = map('sclang.start'),
+                    ['<Leader>kq'] = map('sclang.hard_stop', { 'n', 'x', 'i' }),
+                    ['<Leader>kr'] = map('sclang.recompile'),
+                    ['<Leader>kb'] = map_expr('s.boot'),
+                    ['<Leader>km'] = map_expr('s.meter'),
+                },
+                documentation = {
+                    cmd = "/opt/homebrew/bin/pandoc", -- TODO: Change this depending on the OS
+                    direction = "bot",
+                },
+                postwin = {
+                    highlight = true,
+                    size = 15,
+                    -- horizontal = true,
+                    -- direction =  "bot",
+                    float = {
+                        enabled = true,
+                    },
+                },
+                snippet = {
+                    engine = {
+                        name = 'luasnip',
+                        options = {
+                            descriptions = true,
+                        },
+                    },
+                },
+            });
+            local help_for_selected_or_word = function()
+                local mode = vim.api.nvim_get_mode().mode
+                local text
+                if mode:match("[vV\22]") then -- Visual, Visual Line, or Visual Block mode
+                    local original_clip = vim.fn.getreg('"')
+                    local original_clip_type = vim.fn.getregtype('"')
+                    vim.cmd('silent normal! y')
+                    text = vim.fn.getreg('"')
+                    vim.fn.setreg('"', original_clip, original_clip_type)
+                else -- Normal mode
+                    text = vim.fn.expand('<cword>')
+                end
+
+                text = text:gsub('"', '\\"'):gsub('\\', '\\\\')
+                vim.cmd('redraw')
+                vim.cmd('SCNvimHelp ' .. text)
+            end
+            vim.keymap.set('n', '<leader>kh', help_for_selected_or_word,
+                { noremap = true, desc = 'Get SuperCollider help for word under cursor' })
+            vim.keymap.set('x', '<leader>kh', help_for_selected_or_word,
+                { noremap = true, desc = 'Get SuperCollider help for selected text' })
+
+        end
     },
 }, lazyPmOptions);
