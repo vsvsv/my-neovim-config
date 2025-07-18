@@ -14,6 +14,8 @@ vim.opt.fillchars = { eob = " " }; -- disable '~' at the end of buffer
 vim.loader.enable();
 vim.opt.signcolumn = "yes";
 
+vim.o.mousemoveevent = true; -- for plugins which rely on mouse position
+
 vim.opt.list = true;  -- show tabs, end-of-line spaces, etc. with special characters
 vim.opt.listchars = { -- 'special characters' settings
     trail = '~',
@@ -94,8 +96,10 @@ vim.filetype.add({
 
 
 -- Quickfix list key mappings
+-- Note: ':cc' jumps to the current selected QF line in the editor
 vim.keymap.set('n', '<Leader>cn', '<cmd>cnext<cr>'); -- Open next file in quickfix list
 vim.keymap.set('n', '<Leader>cp', '<cmd>cprev<cr>'); -- Open previous file in quickfix list
+vim.keymap.set('n', '<Leader>cq', '<cmd>cclose<cr>'); -- Close quickfix list
 
 -- Search related bindings
 vim.keymap.set('v', '<Leader>s', 'y/\\V<C-R>"<CR>'); -- Search forward for selected text

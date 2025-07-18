@@ -2,9 +2,10 @@
 -- A Neovim config by vsvsv (vsevolodplatunov@gmail.com)
 --
 
-require("core_config");
 local colorscheme = require("colorscheme");
+require("core_config");
 require("packages");
+require("build_in_term");
 
 -- Set English regardless of system language
 vim.cmd("language en_US");

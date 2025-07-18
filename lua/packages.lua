@@ -1353,6 +1353,13 @@ require("lazy").setup({
         end,
     },
     {
+        -- Provise LSP diagnostics on mouse hover (more convinient on narrow terminal windows)
+        -- https://github.com/soulis-1256/eagle.nvim
+        "soulis-1256/eagle.nvim",
+        lazy = false,
+        opts = {}
+    },
+    {
         -- https://github.com/davidgranstrom/scnvim
         'davidgranstrom/scnvim',
         enabled = false,
@@ -1423,7 +1430,6 @@ require("lazy").setup({
                 { noremap = true, desc = 'Get SuperCollider help for word under cursor' })
             vim.keymap.set('x', '<leader>kh', help_for_selected_or_word,
                 { noremap = true, desc = 'Get SuperCollider help for selected text' })
-
         end
     },
 }, lazyPmOptions);
