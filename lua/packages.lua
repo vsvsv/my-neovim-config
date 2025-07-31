@@ -103,13 +103,18 @@ require("lazy").setup({
     {
         -- https://github.com/nvim-treesitter/nvim-treesitter
         "nvim-treesitter/nvim-treesitter",
+        branch = "master",
         build = ":TSUpdate",
         event = { "BufReadPost", "BufNewFile" },
+        dependencies = {
+            "OXY2DEV/markview.nvim",
+            "OXY2DEV/helpview.nvim",
+        },
         config = function()
             local configs = require("nvim-treesitter.configs")
             configs.setup({
                 ensure_installed = "all",
-                ignore_install = { "systemverilog" },
+                ignore_install = { "systemverilog", "ipkg" },
                 sync_install = false,
                 highlight = { enable = true },
                 indent = { enable = true },
@@ -118,18 +123,6 @@ require("lazy").setup({
                 pattern = { [".*/.*%.mm"] = "cpp" },
             });
         end
-    },
-    {
-        -- https://github.com/folke/flash.nvim
-        "folke/flash.nvim",
-        event = "VeryLazy",
-        opts = {},
-        -- stylua: ignore
-        keys = {
-            { "s",     mode = { "n", "x", "o" }, function() require("flash").jump() end,       desc = "Flash" },
-            { "S",     mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-            { "<c-s>", mode = { "c" },           function() require("flash").toggle() end,     desc = "Toggle Flash Search" },
-        },
     },
     {
         -- https://github.com/numToStr/Comment.nvim -- comment and uncomment with "gc"
@@ -152,34 +145,23 @@ require("lazy").setup({
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
             local colors = {
-                fg     = getHlColor("@variable", "foreground"),
-                bg     = "NONE",
-                green  = getHlColor("String", "foreground"),
-                purple = getHlColor("Function", "foreground"),
-                red1   = getHlColor("ErrorMsg", "foreground"),
-                gray1  = getHlColor("StatusLineNC", "foreground"),
-                gray2  = getHlColor("EndOfBuffer", "foreground"),
-                gray3  = getHlColor("SpecialKey", "foreground"),
+                fg          = getHlColor("@variable", "foreground"),
+                bg          = "NONE",
+                inactive_bg = "#181820",
+                gray1       = getHlColor("StatusLineNC", "foreground"),
+                gray2       = getHlColor("EndOfBuffer", "foreground"),
+                gray3       = getHlColor("SpecialKey", "foreground"),
             };
             local my_theme = {
                 normal = {
-                    a = { fg = colors.bg, bg = colors.gray3, gui = "bold" },
-                    b = { fg = "#ffffff", bg = colors.gray1 },
-                    c = { fg = colors.fg, bg = colors.gray3 },
-                },
-                insert = {
-                    a = { fg = colors.gray3, bg = colors.green, gui = "bold" },
-                },
-                visual = {
-                    a = { fg = colors.gray3, bg = colors.purple, gui = "bold" },
-                },
-                replace = {
-                    a = { fg = colors.gray3, bg = colors.red1, gui = "bold" },
+                    a = { fg = colors.bg, bg = colors.inactive_bg, gui = "bold" },
+                    b = { fg = colors.fg, bg = colors.gray2 },
+                    c = { fg = colors.fg, bg = colors.inactive_bg },
                 },
                 inactive = {
-                    a = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
-                    b = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
-                    c = { fg = colors.gray1, bg = colors.gray3, gui = "bold" },
+                    a = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
+                    b = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
+                    c = { fg = colors.gray1, bg = colors.inactive_bg, gui = "bold" },
                 },
             };
             local showGitStatus = function()
@@ -199,7 +181,7 @@ require("lazy").setup({
                     -- theme = "catppuccin",
                 },
                 sections = {
-                    lualine_a = { "mode" },
+                    lualine_a = {},
                     lualine_b = { "branch", showGitStatus, "diagnostics" },
                     lualine_c = { {
                         my_fn,
@@ -210,6 +192,7 @@ require("lazy").setup({
                     lualine_x = { "encoding", "fileformat" },
                     lualine_y = { "filetype" },
                     lualine_z = { { "datetime", style = "%H:%M" }, },
+
                 },
             });
         end
@@ -223,6 +206,7 @@ require("lazy").setup({
             "nvim-lua/plenary.nvim",
             "folke/trouble.nvim",
             "benfowler/telescope-luasnip.nvim",
+            'davidgranstrom/telescope-scdoc.nvim',
         },
         config = function()
             local open_with_trouble = require("trouble.sources.telescope").open;
@@ -237,16 +221,17 @@ require("lazy").setup({
                 },
             });
             telescope.load_extension('luasnip');
+            telescope.load_extension('scdoc');
             local builtin = require("telescope.builtin");
             vim.keymap.set("n", "<leader>ff", function() builtin.find_files() end, {});
             vim.keymap.set("n", "<leader>fg", function() builtin.live_grep() end, {});
-            -- vim.keymap.set("n", "<leader>fb", builtin.buffers, {}); -- disabled, using 'j-morano/buffer_manager.nvim' instead
             vim.keymap.set("n", "<leader>fh", builtin.help_tags, {});
             vim.keymap.set("n", "<leader>ft", builtin.diagnostics, {});                  -- "t" for trouble
             vim.keymap.set("n", "<leader>fd", builtin.lsp_definitions, {});              -- "d" for definitions
             vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});               -- "r" for references
             vim.keymap.set({ "n", "v" }, "<leader>fs", builtin.grep_string, {});
             vim.keymap.set("n", "<leader>fs", telescope.extensions.luasnip.luasnip, {}); -- "s" for snippets
+            vim.keymap.set("n", "<leader>fk", telescope.extensions.scdoc.scdoc, {});
         end
     },
     {
@@ -302,7 +287,6 @@ require("lazy").setup({
         -- https://github.com/ThePrimeagen/harpoon
         "ThePrimeagen/harpoon",
         branch = "harpoon2",
-        commit = "a38be6e", -- TODO: change this when harpoon2 branch stabilizes
         lazy = true,
         event = "VeryLazy",
         dependencies = { "nvim-lua/plenary.nvim" },
@@ -310,7 +294,7 @@ require("lazy").setup({
             local harpoon = require("harpoon");
             harpoon:setup({});
 
-            vim.keymap.set("n", "<leader>a", function() harpoon:list():append() end)
+            vim.keymap.set("n", "<leader>a", function() harpoon:list():add() end)
             vim.keymap.set("n", "<leader>h", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
 
             vim.keymap.set("n", "<leader>1", function() harpoon:list():select(1) end)
@@ -341,11 +325,98 @@ require("lazy").setup({
                 enable_autosnippets = true,
             });
             if opts then luasnip.config.setup(opts) end
-            -- vim.tbl_map(
-            --     function(type) require("luasnip.loaders.from_" .. type).lazy_load() end,
-            --     { "vscode", "snipmate", "lua" }
-            -- );
             require("luasnip.loaders.from_vscode").load({ paths = { "./snippets" } });
+        end,
+    },
+    {
+        -- AI Slop Companion: chat, inline actions, etc (but not autocompletion)
+        -- https://github.com/olimorris/codecompanion.nvim
+        "olimorris/codecompanion.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "nvim-treesitter/nvim-treesitter",
+        },
+        config = function()
+            require("codecompanion").setup({
+                strategies = {
+                    chat = {
+                        adapter = "gemini",
+                        keymaps = {
+                            close = {
+                                modes = { n = "<C-x>", i = "<C-x>" },
+                            },
+                        },
+                    },
+                    inline = {
+                        adapter = "gemini",
+                    },
+                    cmd = {
+                        adapter = "gemini",
+                    },
+                },
+                display = {
+                    chat = {
+                        window = {
+                            layout = "buffer",
+                        },
+                    },
+                    action_palette = {
+                        prompt = "LLM Prompt: ",
+                    },
+                    diff = {
+                        layout = "vertical",
+                    },
+                },
+            });
+        end,
+        keys = {
+            {
+                "<Leader>ct",
+                "<cmd>CodeCompanionChat Toggle<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "<Leader>ca",
+                "<cmd>CodeCompanionActions<CR>",
+                mode = { "n", "o", "x" },
+            },
+            {
+                "<Leader>cc",
+                "<cmd>CodeCompanion<CR>",
+                mode = { "n", "o", "x", "v" },
+            },
+        },
+    },
+    {
+        -- AI Slop Companion: autocompletion suggenstions
+        -- https://github.com/milanglacier/minuet-ai.nvim
+        --
+        -- (Triggers only by Ctrl+\ in insert mode, see config for 'nvim-cmp')
+        'milanglacier/minuet-ai.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require('minuet').setup {
+                provider = 'gemini',
+                gemini = {
+                    model = 'gemini-2.5-flash',
+                    stream = true,
+                    api_key = 'GEMINI_API_KEY',
+                    optional = {
+                        maxOutputTokens = 256,
+                        thinkingConfig = {
+                            thinkingBudget = 0,
+                        },
+                    },
+                },
+                add_single_line_entry = false,
+                n_completions = 5,
+                cmp = {
+                    enable_auto_complete = false,
+                },
+            }
         end,
     },
     {
@@ -403,6 +474,7 @@ require("lazy").setup({
                     },
                 },
                 mapping = cmp.mapping({
+                    ["<C-'>"] = require('minuet').make_cmp_map(),
                     ["<Tab>"] = cmp.mapping(function(fallback)
                         if cmp.visible() then
                             cmp.select_next_item()
@@ -427,9 +499,11 @@ require("lazy").setup({
                     ["<C-e>"] = cmp.mapping.abort(),
                     ["<C-u>"] = cmp.mapping.abort(),
                     ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                    ["<C-\\>"] = require('minuet').make_cmp_map(),
                 }),
                 vim.keymap.set("n", "<C-c>", cmp.mapping.complete),
                 sources = cmp.config.sources({
+                    { name = "minuet" },
                     { name = "luasnip" },
                     {
                         name = "nvim_lsp",
@@ -451,6 +525,14 @@ require("lazy").setup({
                             -- vim_item.menu = string.sub(vim_item.menu, 1, 16);
                             vim_item.menu = nil;
                         end
+
+                        -- Add fancy meny symbol for LLM-generated suggenstions
+                        if vim.tbl_contains({ 'minuet' }, entry.source.name) then
+                            vim_item.menu = "[󰙴]"
+                            vim_item.menu_hl_group = "@text.title"
+                            return lspkind.cmp_format({ with_text = false })(entry, vim_item)
+                        end
+
                         return lspkind.cmp_format({
                             mode = "symbol",
                             maxwidth = 25, -- prevent the popup from showing more than 20 chars
@@ -461,6 +543,9 @@ require("lazy").setup({
                 },
                 completion = {
                     completeopt = "menu,menuone,noinsert",
+                },
+                performance = {
+                    fetching_timeout = 2000,
                 }
             });
             cmp.setup.cmdline({ "/", "?" }, {
@@ -502,10 +587,24 @@ require("lazy").setup({
             local nvim_cmp_lsp = require("cmp_nvim_lsp");
             local capabilities = nvim_cmp_lsp.default_capabilities();
 
+            -- Use `zls_master` Mason package for Zig language server.
+            -- If set to `true`, Mason will automatically install and configure ZLS.
+            --
+            -- If set to `false`, `zvm` command should be installed manually and available on the system.
+            -- It can be installed using ZVM:
+            --     `zvm i --zls master` (or use any other version instead of `master`)
+            --
+            -- When using Zig master (nightly), ZLS version from `zls_master` can be out of sync
+            -- with actual Zig version, which can result in incomplete functionality of ZLS.
+            -- To avoid this behavior, set this option to `false`,
+            -- and install matching `zig` and `zls` versions with ZVM using snippet above.
+            -- When using system-wide ZLS,
+            -- remove the Mason version located at `~/.local/share/nvim/mason/bin/zls`.
+            local use_zls_from_mason = false;
+
             local required_lsps = {
                 "lua_ls",
                 "vtsls",
-                -- "zls",
                 "markdown_oxide",
                 "clangd",
                 "jsonls",
@@ -514,28 +613,33 @@ require("lazy").setup({
                 "cssls",
                 "eslint",
                 "rust_analyzer",
-                -- "gopls",
-                "pyright",
+                "glsl_analyzer",
+                "bashls",
+                "pylsp",
+                "cmake",
+                "opencl_ls",
+                "wgsl_analyzer",
+                "yamlls",
             };
 
             mason.setup({
                 registries = {
                     "github:mason-org/mason-registry",
-                    -- add local registry with nightly version of ZLS
-                    "file:" .. vim.fn.stdpath("config") .. "/mason-custom-registry"
                 },
             });
+
 
             registry.refresh(function()
                 if not registry.is_installed("yq") then
                     vim.cmd("MasonInstall yq"); -- needed for local mason registry
                 end
-                if not registry.is_installed("zls_master") then
-                    vim.cmd("MasonInstall zls_master"); -- nigtly ZLS from local registry
+
+                if (not registry.is_installed("zls_master")) and use_zls_from_mason then
+                    vim.cmd("MasonInstall zls_master"); -- latest ZLS from local Mason registry
                 end
             end);
 
-            mason_lspconfig.setup({ ensure_installed = required_lsps });
+            mason_lspconfig.setup({ ensure_installed = required_lsps, automatic_enable = false });
             neodev.setup({
                 library = { plugins = { "nvim-dap-ui" }, types = true },
             });
@@ -572,8 +676,20 @@ require("lazy").setup({
                         "--function-arg-placeholders=0",
                     };
                 end
+                if string.find(lsp_name, "basedpyright") then
+                    settingsObj.on_new_config = function(config, root_dir)
+                        local env = vim.trim(
+                            vim.fn.system('cd "' .. root_dir .. '"; poetry env info -p 2>/dev/null')
+                        )
+                        if string.len(env) > 0 then
+                            config.settings.python = {
+                                pythonPath = env .. '/bin/python'
+                            }
+                            config.settings.basedpyright.typeCheckingMode = "off"
+                        end
+                    end
+                end
                 lspconfig[lsp_name].setup(settingsObj);
-                ::continue::
             end
 
             vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
@@ -978,6 +1094,7 @@ require("lazy").setup({
         },
     },
     {
+        -- https://github.com/danymat/neogen
         "danymat/neogen",
         lazy = true,
         event = "VeryLazy",
@@ -1001,42 +1118,78 @@ require("lazy").setup({
         end,
     },
     {
-        -- https://github.com/saifulapm/chartoggle.nvim
         -- Toogle comma(,), semicolon(;) or other character in neovim end of line from anywhere in the line
-        'saifulapm/chartoggle.nvim',
-        opts = {
-            leader = '<Leader>',            -- you can use any key as Leader
-            keys = { ',', ';' }             -- Which keys will be toggle end of the line
+        -- https://github.com/saifulapm/commasemi.nvim
+        "saifulapm/commasemi.nvim",
+        keys = {
+            { "<Leader>,", desc = "Toggle comma" },
+            { "<Leader>;", desc = "Toggle semicolon" },
         },
-        keys = { '<Leader>,', '<Leader>;' } -- Lazy loaded
+        opts = {
+            leader = "<Leader>",
+            keymaps = true,
+            commands = false,
+        },
     },
     {
-        -- https://github.com/j-morano/buffer_manager.nvim
-        'j-morano/buffer_manager.nvim',
-        lazy = true,
+        -- Add visual indicator for yanking/pasting and undo/redo
+        -- https://github.com/rachartier/tiny-glimmer.nvim
+        "rachartier/tiny-glimmer.nvim",
+        lazy = false,
         event = "VeryLazy",
-        config = function()
-            local buf_mgr_ui = require("buffer_manager.ui");
-            require("buffer_manager").setup({
-                width = 0.9,
-            });
-            vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
-        end,
+        priority = 10, -- Needs to be a really low priority, to catch others plugins keybindings.
+        opts = {
+            overwrite = {
+                paste = {
+                    enabled = true,
+                    default_animation = {
+                        name = "reverse_fade",
+                        settings = {
+                            max_duration = 200,
+                            min_duration = 200,
+                        },
+                    },
+                },
+                undo = { enabled = true },
+                redo = {
+                    enabled = true,
+                    default_animation = {
+                        name = "fade",
+                        settings = {
+                            from_color = "#5e4031",
+                        },
+                    },
+                },
+            },
+        },
     },
     {
         "OXY2DEV/helpview.nvim",
         lazy = false, -- Recommended
-        dependencies = {
-            "nvim-treesitter/nvim-treesitter"
-        }
     },
     {
         "OXY2DEV/markview.nvim",
         lazy = false, -- Recommended
         dependencies = {
-            "nvim-treesitter/nvim-treesitter",
             "nvim-tree/nvim-web-devicons"
-        }
+        },
+        opts = {
+            preview = {
+                filetypes = { "markdown", "quarto", "rmd", "typst", "codecompanion" },
+                enable_hybrid_mode = true,
+                ignore_buftypes = {},
+                condition = function(buffer)
+                    local ft, bt = vim.bo[buffer].ft, vim.bo[buffer].bt;
+                    if bt == "nofile" and ft == "codecompanion" then
+                        return true;
+                    elseif bt == "nofile" then
+                        return false;
+                    else
+                        return true;
+                    end
+                end
+            },
+        },
     },
     {
         -- Commands for moving/selecting parts of camelCaseWords (me, mb, mw)
@@ -1066,5 +1219,216 @@ require("lazy").setup({
                 mode = { "n", "o", "x" },
             },
         },
+    },
+    {
+        -- Extend the functionality of C-a/C-x (increment/decrement) for other data types
+        -- https://github.com/monaqa/dial.nvim
+        "monaqa/dial.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local augend = require("dial.augend")
+            require("dial.config").augends:register_group {
+                default = {
+                    augend.integer.alias.decimal,  -- nonnegative decimal number (0, 1, 2, 3, ...)
+                    augend.integer.alias.hex,      -- nonnegative hex number  (0x01, 0x1a1f, etc.)
+                    augend.date.alias["%Y-%m-%d"], -- date (2022-02-17, etc.)
+                    augend.constant.alias.bool,
+                    augend.constant.new {
+                        elements = { "and", "or" },
+                        word = true,   -- if false, "sand" is incremented into "sor", "doctor" into "doctand", etc.
+                        cyclic = true, -- "or" is incremented into "and".
+                    },
+                    augend.constant.new {
+                        elements = { "undefined", "null" },
+                        word = true,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "max", "min" },
+                        word = true,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "&&", "||" },
+                        word = false,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "==", "!=" },
+                        word = false,
+                        cyclic = true,
+                    },
+                    augend.constant.new {
+                        elements = { "===", "!==" },
+                        word = false,
+                        cyclic = true,
+                    },
+                },
+            };
+        end,
+        keys = {
+            {
+                "<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "normal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "normal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "g<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "gnormal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "g<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "gnormal")<CR>',
+                mode = { "n" },
+            },
+            {
+                "<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "visual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "visual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "g<C-a>",
+                '<cmd>lua require("dial.map").manipulate("increment", "gvisual")<CR>',
+                mode = { "v" },
+            },
+            {
+                "g<C-x>",
+                '<cmd>lua require("dial.map").manipulate("decrement", "gvisual")<CR>',
+                mode = { "v" },
+            },
+        },
+    },
+    {
+        -- Swap sibling arguments, list items, etc on the same line
+        -- https://github.com/Wansmer/sibling-swap.nvim
+        'Wansmer/sibling-swap.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local sibling_swap = require('sibling-swap');
+            local keymaps = {
+                ['<C-l>'] = 'swap_with_right',
+                ['<C-h>'] = 'swap_with_left',
+            };
+            sibling_swap.setup({
+                use_default_keymaps = false,
+                highlight_node_at_cursor = true,
+                allow_interline_swaps = false,
+                keymaps = keymaps,
+            });
+            for keymap, action in pairs(keymaps) do
+                vim.keymap.set(
+                    'n',
+                    keymap,
+                    sibling_swap[action],
+                    { desc = 'sibling-swap: ' .. action }
+                )
+            end
+        end,
+    },
+    {
+        -- https://github.com/j-morano/buffer_manager.nvim
+        'j-morano/buffer_manager.nvim',
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            local buf_mgr_ui = require("buffer_manager.ui");
+            require("buffer_manager").setup({
+                width = 0.9,
+            });
+            vim.keymap.set("n", "<leader>fb", buf_mgr_ui.toggle_quick_menu, {});
+        end,
+    },
+    {
+        -- Provise LSP diagnostics on mouse hover (more convinient on narrow terminal windows)
+        -- https://github.com/soulis-1256/eagle.nvim
+        "soulis-1256/eagle.nvim",
+        lazy = false,
+        opts = {}
+    },
+    {
+        -- https://github.com/davidgranstrom/scnvim
+        'davidgranstrom/scnvim',
+        enabled = false,
+        lazy = true,
+        event = "VeryLazy",
+        ft = 'supercollider',
+        config = function()
+            local scnvim = require('scnvim');
+            local map = scnvim.map;
+            local map_expr = scnvim.map_expr;
+            scnvim.setup({
+                ensure_installed = true,
+                keymaps = {
+                    ['<Leader>kt'] = map('postwin.toggle'),
+                    ['<Leader-kc>'] = map('postwin.clear', { 'n', 'i' }),
+                    -- ['<C-=>'] = map('editor.send_line', { 'i', 'n' }),
+                    ['<C-=>'] = {
+                        map('editor.send_block', { 'i', 'n' }),
+                        map('editor.send_selection', 'x'),
+                    },
+                    ['<Leader-ks>'] = map('signature.show', { 'n', 'i' }),
+                    ['<Leader>kk'] = map('sclang.start'),
+                    ['<Leader>kq'] = map('sclang.hard_stop', { 'n', 'x', 'i' }),
+                    ['<Leader>kr'] = map('sclang.recompile'),
+                    ['<Leader>kb'] = map_expr('s.boot'),
+                    ['<Leader>km'] = map_expr('s.meter'),
+                },
+                documentation = {
+                    cmd = "/opt/homebrew/bin/pandoc", -- TODO: Change this depending on the OS
+                    direction = "bot",
+                },
+                postwin = {
+                    highlight = true,
+                    size = 15,
+                    -- horizontal = true,
+                    -- direction =  "bot",
+                    float = {
+                        enabled = true,
+                    },
+                },
+                snippet = {
+                    engine = {
+                        name = 'luasnip',
+                        options = {
+                            descriptions = true,
+                        },
+                    },
+                },
+            });
+            local help_for_selected_or_word = function()
+                local mode = vim.api.nvim_get_mode().mode
+                local text
+                if mode:match("[vV\22]") then -- Visual, Visual Line, or Visual Block mode
+                    local original_clip = vim.fn.getreg('"')
+                    local original_clip_type = vim.fn.getregtype('"')
+                    vim.cmd('silent normal! y')
+                    text = vim.fn.getreg('"')
+                    vim.fn.setreg('"', original_clip, original_clip_type)
+                else -- Normal mode
+                    text = vim.fn.expand('<cword>')
+                end
+
+                text = text:gsub('"', '\\"'):gsub('\\', '\\\\')
+                vim.cmd('redraw')
+                vim.cmd('SCNvimHelp ' .. text)
+            end
+            vim.keymap.set('n', '<leader>kh', help_for_selected_or_word,
+                { noremap = true, desc = 'Get SuperCollider help for word under cursor' })
+            vim.keymap.set('x', '<leader>kh', help_for_selected_or_word,
+                { noremap = true, desc = 'Get SuperCollider help for selected text' })
+        end
     },
 }, lazyPmOptions);
