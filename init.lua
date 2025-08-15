@@ -5,7 +5,7 @@
 local colorscheme = require("colorscheme");
 require("core_config");
 require("packages");
-require("build_in_term");
+require("exec_term_cmd");
 
 -- Set English regardless of system language
 vim.cmd("language en_US");

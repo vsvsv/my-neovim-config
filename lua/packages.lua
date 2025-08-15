@@ -21,17 +21,16 @@ ensureLazyPmInstalled();
 
 local getHlColor = function(hlstr, attr)
     ---@diagnostic disable-next-line: deprecated
-    return string.format("#%06x", vim.api.nvim_get_hl_by_name(hlstr, true)[attr]);
+    local hl = vim.api.nvim_get_hl_by_name(hlstr, true)[attr];
+    if hl == nil then hl = 0xffffff end
+    return string.format("#%06x", hl);
 end
 
 local lazyPmOptions = {
-    defaults = {
-        lazy = true,
-    },
+    defaults = { lazy = true },
+    ui = { border = "single" },
     performance = {
-        cache = {
-            enabled = true,
-        },
+        cache = { enabled = true },
         rtp = {
             disabled_plugins = {
                 "gzip",
@@ -50,7 +49,6 @@ require("lazy").setup({
     {
         -- https://github.com/nvim-tree/nvim-web-devicons
         "nvim-tree/nvim-web-devicons",
-        lazy = true,
     },
     {
         -- https://github.com/nvim-neo-tree/neo-tree.nvim
@@ -217,6 +215,9 @@ require("lazy").setup({
                         n = { ["<c-t>"] = open_with_trouble },
                     },
                     layout_strategy = "vertical",
+                    layout_config = {
+                        vertical = { width = 0.98, height = 0.95 }
+                    }
                 },
             });
             telescope.load_extension('luasnip');
@@ -230,7 +231,6 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>fr", builtin.lsp_references, {});               -- "r" for references
             vim.keymap.set({ "n", "v" }, "<leader>fs", builtin.grep_string, {});
             vim.keymap.set("n", "<leader>fs", telescope.extensions.luasnip.luasnip, {}); -- "s" for snippets
-            vim.keymap.set("n", "<leader>fk", telescope.extensions.scdoc.scdoc, {});
         end
     },
     {
@@ -622,6 +622,7 @@ require("lazy").setup({
             };
 
             mason.setup({
+                ui = { border = 'single' },
                 registries = {
                     "github:mason-org/mason-registry",
                     -- add local registry with latest version of ZLS
@@ -692,12 +693,6 @@ require("lazy").setup({
                 end
                 lspconfig[lsp_name].setup(settingsObj);
             end
-
-            vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-                vim.lsp.handlers.hover, {
-                    border = "single"
-                }
-            );
         end
     },
     {
@@ -865,7 +860,7 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>la", function() vim.lsp.buf.code_action() end);
             vim.keymap.set("n", "<leader>ls", function() vim.lsp.buf.rename() end);
             vim.keymap.set("n", "<leader>lf", function() vim.lsp.buf.format() end);
-            vim.keymap.set("n", "<leader>i", function() vim.lsp.buf.hover() end);
+            vim.keymap.set("n", "<leader>i", function() vim.lsp.buf.hover({ border = 'single' }) end);
             vim.keymap.set("n", "<leader>li", function() vim.diagnostic.open_float() end);
         end
     },
@@ -944,8 +939,8 @@ require("lazy").setup({
         end
     },
     {
-        -- https://github.com/NvChad/nvim-colorizer.lua
-        "NvChad/nvim-colorizer.lua",
+        -- https://github.com/catgoose/nvim-colorizer.lua
+        "catgoose/nvim-colorizer.lua",
         lazy = true,
         event = "VeryLazy",
         config = function()
@@ -1068,6 +1063,10 @@ require("lazy").setup({
             flavour = "mocha",
             transparent_background = true,
             no_italic = true,
+            float = {
+                transparent = true,
+                solid = true,
+            },
             integrations = {
                 cmp = true,
                 gitsigns = true,
@@ -1080,9 +1079,52 @@ require("lazy").setup({
                 dap_ui = true,
                 lsp_trouble = true,
             },
+            -- They fcked up colors somehow in the latest version, changing them to match vscode.
+            -- So there is overrides to revert that bs.
+            custom_highlights = function(C)
+                local O = require("catppuccin").options
+                return {
+                    ["@variable.member"] = { fg = C.lavender },
+                    ["@module"] = { fg = C.lavender, style = O.styles.miscs or { "italic" } },
+                    ["@string.special.url"] = { fg = C.rosewater, style = { "italic", "underline" } },
+                    ["@type.builtin"] = { fg = C.yellow, style = O.styles.properties or { "italic" } },
+                    ["@property"] = { fg = C.lavender, style = O.styles.properties or {} },
+                    ["@constructor"] = { fg = C.sapphire },
+                    ["@keyword.operator"] = { link = "Operator" },
+                    ["@keyword.export"] = { fg = C.sky, style = O.styles.keywords },
+                    ["@markup.strong"] = { fg = C.maroon, style = { "bold" } },
+                    ["@markup.italic"] = { fg = C.maroon, style = { "italic" } },
+                    ["@markup.heading"] = { fg = C.blue, style = { "bold" } },
+                    ["@markup.quote"] = { fg = C.maroon, style = { "bold" } },
+                    ["@markup.link"] = { link = "Tag" },
+                    ["@markup.link.label"] = { link = "Label" },
+                    ["@markup.link.url"] = { fg = C.rosewater, style = { "italic", "underline" } },
+                    ["@markup.raw"] = { fg = C.teal },
+                    ["@markup.list"] = { link = "Special" },
+                    ["@tag"] = { fg = C.mauve },
+                    ["@tag.builtin"] = { fg = C.maroon },
+                    ["@tag.attribute"] = { fg = C.teal, style = O.styles.miscs or { "italic" } },
+                    ["@tag.delimiter"] = { fg = C.subtext0 },
+                    ["@property.css"] = { fg = C.lavender },
+                    ["@property.id.css"] = { fg = C.blue },
+                    ["@type.tag.css"] = { fg = C.mauve },
+                    ["@string.plain.css"] = { fg = C.peach },
+                    ["@constructor.lua"] = { fg = C.flamingo },
+                    ["@property.typescript"] = { fg = C.lavender, style = O.styles.properties or {} },
+                    ["@constructor.typescript"] = { fg = C.lavender },
+                    ["@constructor.tsx"] = { fg = C.lavender },
+                    ["@tag.attribute.tsx"] = { fg = C.teal, style = O.styles.miscs or { "italic" } },
+                    ["@type.builtin.c"] = { fg = C.yellow, style = {} },
+                    ["@type.builtin.cpp"] = { fg = C.yellow, style = {} },
+                    ["@lsp.type.enumMember"] = { fg = C.yellow },
+                }
+            end,
             color_overrides = {
                 all = {
-                    text = "#dff0ff",
+                    -- text = "#dff0ff",
+                    text = "#ffffff",
+                    mantle = "#101010",
+                    crust = "#181818",
                 },
             },
             highlight_overrides = {
@@ -1360,76 +1402,15 @@ require("lazy").setup({
         opts = {}
     },
     {
-        -- https://github.com/davidgranstrom/scnvim
-        'davidgranstrom/scnvim',
-        enabled = false,
+        -- https://github.com/hedyhli/outline.nvim
+        "hedyhli/outline.nvim",
         lazy = true,
         event = "VeryLazy",
-        ft = 'supercollider',
         config = function()
-            local scnvim = require('scnvim');
-            local map = scnvim.map;
-            local map_expr = scnvim.map_expr;
-            scnvim.setup({
-                ensure_installed = true,
-                keymaps = {
-                    ['<Leader>kt'] = map('postwin.toggle'),
-                    ['<Leader-kc>'] = map('postwin.clear', { 'n', 'i' }),
-                    -- ['<C-=>'] = map('editor.send_line', { 'i', 'n' }),
-                    ['<C-=>'] = {
-                        map('editor.send_block', { 'i', 'n' }),
-                        map('editor.send_selection', 'x'),
-                    },
-                    ['<Leader-ks>'] = map('signature.show', { 'n', 'i' }),
-                    ['<Leader>kk'] = map('sclang.start'),
-                    ['<Leader>kq'] = map('sclang.hard_stop', { 'n', 'x', 'i' }),
-                    ['<Leader>kr'] = map('sclang.recompile'),
-                    ['<Leader>kb'] = map_expr('s.boot'),
-                    ['<Leader>km'] = map_expr('s.meter'),
-                },
-                documentation = {
-                    cmd = "/opt/homebrew/bin/pandoc", -- TODO: Change this depending on the OS
-                    direction = "bot",
-                },
-                postwin = {
-                    highlight = true,
-                    size = 15,
-                    -- horizontal = true,
-                    -- direction =  "bot",
-                    float = {
-                        enabled = true,
-                    },
-                },
-                snippet = {
-                    engine = {
-                        name = 'luasnip',
-                        options = {
-                            descriptions = true,
-                        },
-                    },
-                },
+            vim.keymap.set("n", "<Leader>vo", "<cmd>Outline<CR>", { desc = "Toggle Outline" });
+            require("outline").setup({
+                position = "left",
             });
-            local help_for_selected_or_word = function()
-                local mode = vim.api.nvim_get_mode().mode
-                local text
-                if mode:match("[vV\22]") then -- Visual, Visual Line, or Visual Block mode
-                    local original_clip = vim.fn.getreg('"')
-                    local original_clip_type = vim.fn.getregtype('"')
-                    vim.cmd('silent normal! y')
-                    text = vim.fn.getreg('"')
-                    vim.fn.setreg('"', original_clip, original_clip_type)
-                else -- Normal mode
-                    text = vim.fn.expand('<cword>')
-                end
-
-                text = text:gsub('"', '\\"'):gsub('\\', '\\\\')
-                vim.cmd('redraw')
-                vim.cmd('SCNvimHelp ' .. text)
-            end
-            vim.keymap.set('n', '<leader>kh', help_for_selected_or_word,
-                { noremap = true, desc = 'Get SuperCollider help for word under cursor' })
-            vim.keymap.set('x', '<leader>kh', help_for_selected_or_word,
-                { noremap = true, desc = 'Get SuperCollider help for selected text' })
-        end
+        end,
     },
 }, lazyPmOptions);
