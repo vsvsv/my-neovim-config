@@ -16,10 +16,10 @@ vim.opt.signcolumn = "yes";
 
 vim.o.mousemoveevent = true; -- for plugins which rely on mouse position
 
-vim.opt.list = true;  -- show tabs, end-of-line spaces, etc. with special characters
-vim.opt.listchars = { -- 'special characters' settings
+vim.opt.list = true;         -- show tabs, end-of-line spaces, etc. with special characters
+vim.opt.listchars = {        -- 'special characters' settings
     trail = '~',
-    tab = "~>",
+    tab = "╶─",
     nbsp = '␣', -- non-breaking space
     lead = '·', -- leading spaces
 };
@@ -97,8 +97,8 @@ vim.filetype.add({
 
 -- Quickfix list key mappings
 -- Note: ':cc' jumps to the current selected QF line in the editor
-vim.keymap.set('n', '<Leader>cn', '<cmd>cnext<cr>'); -- Open next file in quickfix list
-vim.keymap.set('n', '<Leader>cp', '<cmd>cprev<cr>'); -- Open previous file in quickfix list
+vim.keymap.set('n', '<Leader>cn', '<cmd>cnext<cr>');  -- Open next file in quickfix list
+vim.keymap.set('n', '<Leader>cp', '<cmd>cprev<cr>');  -- Open previous file in quickfix list
 vim.keymap.set('n', '<Leader>cq', '<cmd>cclose<cr>'); -- Close quickfix list
 
 -- Search related bindings
@@ -128,11 +128,11 @@ vim.keymap.set("n", "<Leader>st", function()
 end)
 
 -- Create command aliases for common mistyped commands (capital first letter)
-vim.api.nvim_create_user_command('W', 'write<bang>', {bang = true, range = true})
-vim.api.nvim_create_user_command('Wa', 'wall<bang>', {bang = true})
-vim.api.nvim_create_user_command('Wq', 'wq<bang>', {bang = true, range = true})
-vim.api.nvim_create_user_command('Wqa', 'wqa<bang>', {bang = true})
-vim.api.nvim_create_user_command('Q', 'quit<bang>', {bang = true})
-vim.api.nvim_create_user_command('Qa', 'qa<bang>', {bang = true})
-vim.api.nvim_create_user_command('Qall', 'qall<bang>', {bang = true})
-vim.api.nvim_create_user_command('E', 'edit<bang>', {bang = true, nargs = '?'})
+vim.api.nvim_create_user_command('W', 'write<bang>', { bang = true, range = true })
+vim.api.nvim_create_user_command('Wa', 'wall<bang>', { bang = true })
+vim.api.nvim_create_user_command('Wq', 'wq<bang>', { bang = true, range = true })
+vim.api.nvim_create_user_command('Wqa', 'wqa<bang>', { bang = true })
+vim.api.nvim_create_user_command('Q', 'quit<bang>', { bang = true })
+vim.api.nvim_create_user_command('Qa', 'qa<bang>', { bang = true })
+vim.api.nvim_create_user_command('Qall', 'qall<bang>', { bang = true })
+vim.api.nvim_create_user_command('E', 'edit<bang>', { bang = true, nargs = '?' })
