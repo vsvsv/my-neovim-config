@@ -1412,4 +1412,38 @@ require("lazy").setup({
             });
         end,
     },
+    -- LISP-related stuff
+    {
+        -- https://github.com/Olical/conjure
+        "Olical/conjure",
+        dependencies = { "PaterJason/cmp-conjure" },
+        lazy = true,
+        event = "VeryLazy",
+        ft = { "lisp" },
+        init = function()
+            local conjure_group = vim.api.nvim_create_augroup("ConjureRemoveSponsor", { clear = true })
+            vim.api.nvim_create_autocmd("BufWinEnter", {
+                group = conjure_group,
+                pattern = "conjure-log-*",
+                command = "silent s/; Sponsored by @.*/; Evaluation Log/e",
+            })
+        end,
+    },
+    {
+        "PaterJason/cmp-conjure",
+        lazy = true,
+        config = function()
+            local cmp = require("cmp")
+            local config = cmp.get_config()
+            table.insert(config.sources, { name = "conjure" })
+            return cmp.setup(config)
+        end,
+    },
+    {
+        -- https://github.com/gpanders/nvim-parinfer
+        "gpanders/nvim-parinfer",
+        lazy = true,
+        event = "VeryLazy",
+    },
+    -- end of LISP-related stuff
 }, lazyPmOptions);

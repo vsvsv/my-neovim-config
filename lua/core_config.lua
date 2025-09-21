@@ -14,6 +14,8 @@ vim.opt.fillchars = { eob = " " }; -- disable '~' at the end of buffer
 vim.loader.enable();
 vim.opt.signcolumn = "yes";
 
+vim.g.maplocalleader = ";" -- map <localleader> to ';'
+
 vim.o.mousemoveevent = true; -- for plugins which rely on mouse position
 
 vim.opt.list = true;         -- show tabs, end-of-line spaces, etc. with special characters
@@ -42,7 +44,6 @@ vim.g.netrw_sizestyle = "H";           -- Human-readable files sizes
 vim.g.loaded_netrw = 1;
 vim.g.loaded_netrwPlugin = 1;
 
-vim.keymap.set('n', ',', '@=\'mqYp`qj\'<cr>');                                                  -- Duplicate line __preserving__ cursor position on the line
 vim.keymap.set('v', 'y', 'ygv<Esc>');                                                           -- Yank in visual mode without the cursor moving to the top of the block
 vim.keymap.set('n', '<Leader>n', '<cmd>noh<cr>');                                               -- Reset current search pattern with Spc-h
 vim.keymap.set('n', '<Leader>o', ':<c-u>call append(line("."), repeat([""], v:count1))<cr>');   -- Insert blank line after
