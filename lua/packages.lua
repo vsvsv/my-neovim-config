@@ -1229,8 +1229,9 @@ require("lazy").setup({
                     else
                         return true;
                     end
-                end
+                end,
             },
+            experimental = { check_rtp = false },
         },
     },
     {
@@ -1444,6 +1445,24 @@ require("lazy").setup({
         "gpanders/nvim-parinfer",
         lazy = true,
         event = "VeryLazy",
+    },
+    {
+        -- https://github.com/HiPhish/rainbow-delimiters.nvim
+        "HiPhish/rainbow-delimiters.nvim",
+        lazy = true,
+        event = "VeryLazy",
+        config = function()
+            require('rainbow-delimiters.setup').setup({
+                strategy = {
+                    [''] = function(bufnr) return nil end, -- off by default
+                    commonlisp = 'rainbow-delimiters.strategy.global',
+                },
+                query = {
+                    lisp = 'rainbow-parens',
+                },
+                highlight = {},
+            })
+        end,
     },
     -- end of LISP-related stuff
 }, lazyPmOptions);
