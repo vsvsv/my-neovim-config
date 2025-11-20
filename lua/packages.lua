@@ -51,17 +51,15 @@ require("lazy").setup({
         -- https://github.com/nvim-tree/nvim-web-devicons
         "nvim-tree/nvim-web-devicons",
     },
-    {
+   {
         -- https://github.com/nvim-neo-tree/neo-tree.nvim
         "nvim-neo-tree/neo-tree.nvim",
         branch = "v3.x",
         lazy = false,
-        event = "UIEnter",
         dependencies = {
             "nvim-lua/plenary.nvim",
             "nvim-tree/nvim-web-devicons",
             "MunifTanjim/nui.nvim",
-            "3rd/image.nvim",
         },
         config = function()
             require("neo-tree").setup({
@@ -73,7 +71,7 @@ require("lazy").setup({
                     position = "current",
                     auto_expand_width = true,
                     mappings = {
-                        ["P"] = { "toggle_preview", config = { use_float = true, use_image_nvim = true } },
+                        ["P"] = { "toggle_preview", config = { use_float = true } },
                     }
                 },
                 filesystem = {
@@ -579,7 +577,6 @@ require("lazy").setup({
             "folke/neodev.nvim",
         },
         config = function()
-            local lspconfig = require("lspconfig");
             local mason = require("mason");
             local mason_lspconfig = require("mason-lspconfig");
             local registry = require("mason-registry");
@@ -645,7 +642,7 @@ require("lazy").setup({
                 library = { plugins = { "nvim-dap-ui" }, types = true },
             });
 
-            lspconfig.zls.setup({
+            vim.lsp.config("zls", {
                 capabilities = capabilities,
                 cmd = {
                     "zls",
@@ -690,7 +687,7 @@ require("lazy").setup({
                         end
                     end
                 end
-                lspconfig[lsp_name].setup(settingsObj);
+                vim.lsp.config(lsp_name, settingsObj);
             end
         end
     },
