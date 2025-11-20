@@ -1417,7 +1417,7 @@ require("lazy").setup({
         dependencies = { "PaterJason/cmp-conjure" },
         lazy = true,
         event = "VeryLazy",
-        ft = { "lisp" },
+        ft = {},
         init = function()
             local conjure_group = vim.api.nvim_create_augroup("ConjureRemoveSponsor", { clear = true })
             vim.api.nvim_create_autocmd("BufWinEnter", {
@@ -1425,9 +1425,46 @@ require("lazy").setup({
                 pattern = "conjure-log-*",
                 command = "silent s/; Sponsored by @.*/; Evaluation Log/e",
             })
+
+            vim.g["conjure#client_on_load"] = false;
+            vim.g["conjure#log#hud#anchor"] = "SE";
+            vim.g["conjure#log#hud#width"] = 1.0;
+            vim.keymap.set( -- create a keymap for starting Swank server
+                'n',
+                '<localleader>ss',
+                function()
+                    vim.cmd('tabnew');
+                    vim.fn.termopen({
+                        'ros',
+                        'run',
+                        '--eval',
+                        '(ql:quickload :swank)',
+                        '--eval',
+                        '(swank:create-server :dont-close t)',
+                    });
+                    local term_bufnr = vim.api.nvim_get_current_buf();
+                    vim.cmd('tabprevious');
+                    vim.api.nvim_buf_set_name(term_bufnr, "Swank Server");
+
+                    vim.notify("Starting Swank server...", vim.log.levels.INFO)
+                    vim.defer_fn(function()
+                        vim.notify("Attempting to connect with Conjure...", vim.log.levels.INFO)
+                        vim.cmd('ConjureConnect')
+                    end, 1000);
+                end,
+                { noremap = true, silent = true, desc = "Start Swank server" }
+            );
+            vim.keymap.set( -- keymap for starting Conjure client
+                'n',
+                '<localleader>sc',
+                '<cmd>ConjureConnect<cr>',
+                { noremap = true, silent = true, desc = "Start Swank client" }
+            );
         end,
     },
     {
+        -- https://github.com/PaterJason/cmp-conjure
+        -- nvim-cmp completions for Conjure
         "PaterJason/cmp-conjure",
         lazy = true,
         config = function()
