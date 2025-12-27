@@ -103,7 +103,7 @@ require("lazy").setup({
         build = ":TSUpdate",
         event = { "BufReadPost", "BufNewFile" },
         dependencies = {
-            "OXY2DEV/markview.nvim",
+        --     "OXY2DEV/markview.nvim",
             "OXY2DEV/helpview.nvim",
         },
         config = function()
@@ -566,6 +566,19 @@ require("lazy").setup({
         end
     },
     {
+        -- https://github.com/folke/lazydev.nvim
+        "folke/lazydev.nvim",
+        ft = "lua",
+        opts = {
+            library = {
+                -- See the configuration section for more details
+                -- Load luvit types when the `vim.uv` word is found
+                { path = "luvit-meta/library", words = { "vim%.uv" } },
+            },
+        },
+    },
+    { "Bilal2453/luvit-meta", lazy = true },
+    {
         -- https://github.com/williamboman/mason-lspconfig.nvim
         "neovim/nvim-lspconfig",
         lazy = true,
@@ -574,13 +587,12 @@ require("lazy").setup({
             "williamboman/mason.nvim",
             "williamboman/mason-lspconfig.nvim",
             "hrsh7th/nvim-cmp",
-            "folke/neodev.nvim",
+            "folke/lazydev.nvim",
         },
         config = function()
             local mason = require("mason");
             local mason_lspconfig = require("mason-lspconfig");
             local registry = require("mason-registry");
-            local neodev = require("neodev");
             local nvim_cmp_lsp = require("cmp_nvim_lsp");
             local capabilities = nvim_cmp_lsp.default_capabilities();
 
@@ -638,9 +650,6 @@ require("lazy").setup({
             end);
 
             mason_lspconfig.setup({ ensure_installed = required_lsps, automatic_enable = false });
-            neodev.setup({
-                library = { plugins = { "nvim-dap-ui" }, types = true },
-            });
 
             vim.lsp.config("zls", {
                 capabilities = capabilities,
@@ -650,6 +659,7 @@ require("lazy").setup({
                     vim.fn.stdpath("config") .. "/lsp-config/zls.json",
                 }
             });
+            vim.lsp.enable("zls");
 
             for _, lsp_name in ipairs(required_lsps) do
                 local settingsObj = { capabilities = capabilities };
@@ -688,6 +698,7 @@ require("lazy").setup({
                     end
                 end
                 vim.lsp.config(lsp_name, settingsObj);
+                vim.lsp.enable(lsp_name);
             end
         end
     },
@@ -1206,31 +1217,31 @@ require("lazy").setup({
         "OXY2DEV/helpview.nvim",
         lazy = false, -- Recommended
     },
-    {
-        "OXY2DEV/markview.nvim",
-        lazy = false, -- Recommended
-        dependencies = {
-            "nvim-tree/nvim-web-devicons"
-        },
-        opts = {
-            preview = {
-                filetypes = { "markdown", "quarto", "rmd", "typst", "codecompanion" },
-                enable_hybrid_mode = true,
-                ignore_buftypes = {},
-                condition = function(buffer)
-                    local ft, bt = vim.bo[buffer].ft, vim.bo[buffer].bt;
-                    if bt == "nofile" and ft == "codecompanion" then
-                        return true;
-                    elseif bt == "nofile" then
-                        return false;
-                    else
-                        return true;
-                    end
-                end,
-            },
-            experimental = { check_rtp = false },
-        },
-    },
+    -- {
+    --     "OXY2DEV/markview.nvim",
+    --     lazy = false, -- Recommended
+    --     dependencies = {
+    --         "nvim-tree/nvim-web-devicons"
+    --     },
+    --     opts = {
+    --         preview = {
+    --             filetypes = { "markdown", "quarto", "rmd", "typst", "codecompanion" },
+    --             enable_hybrid_mode = true,
+    --             ignore_buftypes = {},
+    --             condition = function(buffer)
+    --                 local ft, bt = vim.bo[buffer].ft, vim.bo[buffer].bt;
+    --                 if bt == "nofile" and ft == "codecompanion" then
+    --                     return true;
+    --                 elseif bt == "nofile" then
+    --                     return false;
+    --                 else
+    --                     return true;
+    --                 end
+    --             end,
+    --         },
+    --         experimental = { check_rtp = false },
+    --     },
+    -- },
     {
         -- Commands for moving/selecting parts of camelCaseWords (me, mb, mw)
         -- https://github.com/chrisgrieser/nvim-spider
